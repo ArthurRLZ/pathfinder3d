@@ -1,6 +1,16 @@
 
+#pragma once
+#include <vector>
+#include "Grid.h"
+#include "Cell.h"
 
-#ifndef PATHFINDER3D_BFS_H
-#define PATHFINDER3D_BFS_H
+class BFS {
+public:
+    static bool run(
+        Grid& grid,
+        Cell start,
+        Cell goal,
+        std::vector<Cell>& outPath
+    );
+};
 
-#endif //PATHFINDER3D_BFS_H

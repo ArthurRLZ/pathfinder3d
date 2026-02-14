@@ -9,3 +9,5 @@ add_executable(pathfinder3d src/app/main.cpp
         src/model/BFS.cpp
         src/model/BFS.h
         src/model/Cell.h)
+
+target_include_directories(pathfinder3d PRIVATE src)

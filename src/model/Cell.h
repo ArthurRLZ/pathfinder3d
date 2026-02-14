@@ -1,5 +1,7 @@
 
-#ifndef PATHFINDER3D_CELL_H
-#define PATHFINDER3D_CELL_H
+#pragma once
 
-#endif //PATHFINDER3D_CELL_H
+struct Cell {
+    int x;
+    int y;
+};

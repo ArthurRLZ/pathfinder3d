@@ -1,5 +1,22 @@
 
-#ifndef PATHFINDER3D_GRID_H
-#define PATHFINDER3D_GRID_H
+#pragma once
+#include <vector>
 
-#endif //PATHFINDER3D_GRID_H
+class Grid {
+private:
+    int width;
+    int height;
+    std::vector<std::vector<int>> cells;
+
+public:
+    Grid(int w, int h);
+
+    int get(int x, int y) const;
+    void set(int x, int y, int value);
+
+    bool isInside(int x, int y) const;
+
+    int getWidth() const;
+    int getHeight() const;
+};
+
