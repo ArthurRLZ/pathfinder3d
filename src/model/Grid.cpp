@@ -1,14 +1,14 @@
 #include "Grid.h"
 
 Grid::Grid(int w, int h) : width(w), height(h) {
-    cells.resize(height, std::vector<int>(width, 0));
+    cells.resize(height, std::vector<CellType>(width, CellType::Empty));
 }
 
-int Grid::get(int x, int y) const {
+CellType Grid::get(int x, int y) const {
     return cells[y][x];
 }
 
-void Grid::set(int x, int y, int value) {
+void Grid::set(int x, int y, CellType value) {
     cells[y][x] = value;
 }
 

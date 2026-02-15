@@ -44,16 +44,16 @@ bool BFS::run(Grid& grid, Cell start, Cell goal, std::vector<Cell>& outPath) {
             if (!grid.isInside(next.x, next.y))
                 continue;
 
-            int value = grid.get(next.x, next.y);
+            CellType value = grid.get(next.x, next.y);
 
             // Bloqueia parede, visitado, etc.
             // Permite chão (0) e goal (3)
-            if (value != 0 && value != 3)
+            if (value != CellType::Empty && value != CellType::Goal)
                 continue;
 
             // Marca como visitado (exceto o goal)
-            if (value == 0)
-                grid.set(next.x, next.y, 4);
+            if (value == CellType::Empty)
+                grid.set(next.x, next.y, CellType::Visited);
 
             parent[next.y][next.x] = cur;
             q.push(next);

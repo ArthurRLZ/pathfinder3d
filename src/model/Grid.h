@@ -1,22 +1,21 @@
-
 #pragma once
 #include <vector>
+#include "CellType.h"
 
 class Grid {
 private:
     int width;
     int height;
-    std::vector<std::vector<int>> cells;
+    std::vector<std::vector<CellType>> cells;
 
 public:
     Grid(int w, int h);
 
-    int get(int x, int y) const;
-    void set(int x, int y, int value);
+    CellType get(int x, int y) const;
+    void set(int x, int y, CellType value);
 
     bool isInside(int x, int y) const;
 
     int getWidth() const;
     int getHeight() const;
 };
-

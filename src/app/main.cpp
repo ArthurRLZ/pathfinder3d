@@ -16,11 +16,11 @@ void printGrid(const Grid& grid, const std::vector<Cell>& path) {
 
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
-            if (grid.get(x, y) == 1)
+            if (grid.get(x, y) == CellType::Wall)
                 std::cout << "# ";
-            else if (grid.get(x, y) == 2)
+            else if (grid.get(x, y) == CellType::Start)
                 std::cout << "S ";
-            else if (grid.get(x, y) == 3)
+            else if (grid.get(x, y) == CellType::Goal)
                 std::cout << "G ";
             else if (isPath[y][x])
                 std::cout << "* ";
@@ -34,12 +34,12 @@ void printGrid(const Grid& grid, const std::vector<Cell>& path) {
 int main() {
     Grid grid(20, 20);
 
-    grid.set(1, 1, 2);    // Start
-    grid.set(18, 18, 3);  // Goal
+    grid.set(1, 1, CellType::Start);    // Start
+    grid.set(18, 18, CellType::Goal);  // Goal
 
-    grid.set(5, 5, 1);
-    grid.set(5, 6, 1);
-    grid.set(5, 7, 1);
+    grid.set(5, 5, CellType::Wall);
+    grid.set(5, 6, CellType::Wall);
+    grid.set(5, 7, CellType::Wall);
 
     std::vector<Cell> path;
     bool found = BFS::run(grid, {1, 1}, {18, 18}, path);
