@@ -4,6 +4,33 @@
 #include "model/Grid.h"
 #include "model/BFS.h"
 
+void printGrid(const Grid& grid, const std::vector<Cell>& path) {
+    int h = grid.getHeight();
+    int w = grid.getWidth();
+
+    // Marca o caminho no grid
+    std::vector<std::vector<bool>> isPath(h, std::vector<bool>(w, false));
+    for (const Cell& c : path) {
+        isPath[c.y][c.x] = true;
+    }
+
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            if (grid.get(x, y) == 1)
+                std::cout << "# ";
+            else if (grid.get(x, y) == 2)
+                std::cout << "S ";
+            else if (grid.get(x, y) == 3)
+                std::cout << "G ";
+            else if (isPath[y][x])
+                std::cout << "* ";
+            else
+                std::cout << ". ";
+        }
+        std::cout << "\n";
+    }
+}
+
 int main() {
     Grid grid(20, 20);
 
@@ -19,6 +46,7 @@ int main() {
 
     if (found) {
         std::cout << "Caminho encontrado!\n";
+        printGrid(grid, path);
     } else {
         std::cout << "Nenhum caminho encontrado.\n";
     }
