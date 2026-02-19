@@ -1,6 +1,5 @@
 #include "Renderer.h"
 #include "model/BFS.h"
-
 #include <GL/glut.h>
 #include <iostream>
 
@@ -24,6 +23,7 @@ void Renderer::run(int argc, char** argv) {
     glutKeyboardFunc(keyboardCallback);
 
     std::cout << "Aperte ENTER para rodar o BFS\n";
+    std::cout << "Aperte R para limpar o labirinto\n";
     glutMainLoop();
 }
 
@@ -62,10 +62,25 @@ void Renderer::display() {
                     drawCube(x, y, 0.2f, 0.2f, 0.8f);
                     break;
                 case CellType::Path:
-                    drawCube(x, y, 0.0f, 1.0f, 1.0f);
+                    drawCube(x, y, 0.0f, 1.0f, 1.0f); // Caminho em destaque 3D
+                    break;
+                case CellType::Visited:
+                    // Lajota amarela no chão
+                    glPushMatrix();
+                    glTranslatef(x, -0.4f, y);
+                    glColor3f(1.0f, 1.0f, 0.0f);
+                    glScalef(0.95f, 0.1f, 0.95f);
+                    glutSolidCube(1.0);
+                    glPopMatrix();
                     break;
                 default:
-                    drawCube(x, y, 0.7f, 0.7f, 0.7f);
+                    // Chão cinza vazio no fundo
+                    glPushMatrix();
+                    glTranslatef(x, -0.5f, y);
+                    glColor3f(0.8f, 0.8f, 0.8f);
+                    glScalef(0.95f, 0.1f, 0.95f);
+                    glutSolidCube(1.0);
+                    glPopMatrix();
             }
         }
     }
@@ -82,18 +97,41 @@ void Renderer::reshape(int w, int h) {
 }
 
 void Renderer::keyboard(unsigned char key, int, int) {
-    if (key == 13) { // ENTER
+    if (key == 13) { 
+        // Limpa estado anterior antes de rodar
+        for (int y = 0; y < grid.getHeight(); y++) {
+            for (int x = 0; x < grid.getWidth(); x++) {
+                CellType t = grid.get(x, y);
+                if (t == CellType::Visited || t == CellType::Path) {
+                    grid.set(x, y, CellType::Empty);
+                }
+            }
+        }
+
         std::vector<Cell> path;
 
         if (BFS::run(grid, startPos, goalPos, path)) {
             for (auto& c : path) {
-                if (grid.get(c.x, c.y) == CellType::Empty)
+                // CORREÇÃO: Pinta o caminho se não for nem Início nem Destino!
+                if (grid.get(c.x, c.y) != CellType::Start && grid.get(c.x, c.y) != CellType::Goal)
                     grid.set(c.x, c.y, CellType::Path);
             }
             std::cout << "Caminho encontrado!\n";
         } else {
             std::cout << "Sem caminho.\n";
         }
+        glutPostRedisplay();
+    }
+    else if (key == 'r' || key == 'R') {
+        for (int y = 0; y < grid.getHeight(); y++) {
+            for (int x = 0; x < grid.getWidth(); x++) {
+                CellType t = grid.get(x, y);
+                if (t != CellType::Start && t != CellType::Goal) {
+                    grid.set(x, y, CellType::Empty);
+                }
+            }
+        }
+        std::cout << "Matriz do labirinto redefinida.\n";
         glutPostRedisplay();
     }
 }
