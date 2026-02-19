@@ -50,7 +50,7 @@ void Renderer::display() {
     for (int y = 0; y < grid.getHeight(); y++) {
         for (int x = 0; x < grid.getWidth(); x++) {
             CellType type = grid.get(x, y);
-
+            
             switch (type) {
                 case CellType::Wall:
                     drawCube(x, y, 0.8f, 0.2f, 0.2f);
@@ -86,7 +86,6 @@ void Renderer::display() {
 
     glutSwapBuffers();
 }
-
 void Renderer::reshape(int w, int h) {
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
@@ -94,7 +93,6 @@ void Renderer::reshape(int w, int h) {
     gluPerspective(45.0, (double)w / h, 1.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
 }
-
 void Renderer::keyboard(unsigned char key, int, int) {
     if (key == 13) { 
         for (int y = 0; y < grid.getHeight(); y++) {
