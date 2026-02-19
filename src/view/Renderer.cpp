@@ -62,10 +62,10 @@ void Renderer::display() {
                     drawCube(x, y, 0.2f, 0.2f, 0.8f);
                     break;
                 case CellType::Path:
-                    drawCube(x, y, 0.0f, 1.0f, 1.0f); // Caminho em destaque 3D
+                    drawCube(x, y, 0.0f, 1.0f, 1.0f); 
                     break;
                 case CellType::Visited:
-                    // Lajota amarela no chão
+
                     glPushMatrix();
                     glTranslatef(x, -0.4f, y);
                     glColor3f(1.0f, 1.0f, 0.0f);
@@ -74,7 +74,6 @@ void Renderer::display() {
                     glPopMatrix();
                     break;
                 default:
-                    // Chão cinza vazio no fundo
                     glPushMatrix();
                     glTranslatef(x, -0.5f, y);
                     glColor3f(0.8f, 0.8f, 0.8f);
@@ -98,7 +97,6 @@ void Renderer::reshape(int w, int h) {
 
 void Renderer::keyboard(unsigned char key, int, int) {
     if (key == 13) { 
-        // Limpa estado anterior antes de rodar
         for (int y = 0; y < grid.getHeight(); y++) {
             for (int x = 0; x < grid.getWidth(); x++) {
                 CellType t = grid.get(x, y);
@@ -112,7 +110,6 @@ void Renderer::keyboard(unsigned char key, int, int) {
 
         if (BFS::run(grid, startPos, goalPos, path)) {
             for (auto& c : path) {
-                // CORREÇÃO: Pinta o caminho se não for nem Início nem Destino!
                 if (grid.get(c.x, c.y) != CellType::Start && grid.get(c.x, c.y) != CellType::Goal)
                     grid.set(c.x, c.y, CellType::Path);
             }
