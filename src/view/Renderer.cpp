@@ -1,12 +1,10 @@
-#include "Renderer.h"
-#include "model/BFS.h"
+#include "view/Renderer.h"
 #include <GL/glut.h>
-#include <iostream>
 
 Renderer* Renderer::instance = nullptr;
 
-Renderer::Renderer(Grid& g, Cell start, Cell goal)
-    : grid(g), startPos(start), goalPos(goal) {}
+Renderer::Renderer(Grid& g, Controller& c)
+    : grid(g), controller(c) {}
 
 void Renderer::run(int argc, char** argv) {
     instance = this;
@@ -22,15 +20,30 @@ void Renderer::run(int argc, char** argv) {
     glutReshapeFunc(reshapeCallback);
     glutKeyboardFunc(keyboardCallback);
 
-    std::cout << "Aperte ENTER para rodar o BFS\n";
-    std::cout << "Aperte R para limpar o labirinto\n";
+    glutMouseFunc(mouseCallback);
+
     glutMainLoop();
 }
 
-void Renderer::displayCallback() { instance->display(); }
-void Renderer::reshapeCallback(int w, int h) { instance->reshape(w, h); }
-void Renderer::keyboardCallback(unsigned char key, int x, int y) {
-    instance->keyboard(key, x, y);
+void Renderer::displayCallback() {
+    instance->display();
+}
+
+void Renderer::reshapeCallback(int w, int h) {
+    instance->reshape(w, h);
+}
+
+void Renderer::keyboardCallback(unsigned char key, int, int) {
+    instance->keyboard(key);
+}
+
+void Renderer::mouseCallback(int button, int state, int x, int y) {
+    instance->mouse(button, state, x, y);
+}
+
+void Renderer::keyboard(unsigned char key) {
+    controller.onKey(key);
+    glutPostRedisplay();
 }
 
 void Renderer::drawCube(int x, int z, float r, float g, float b) {
@@ -45,12 +58,14 @@ void Renderer::display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
-    gluLookAt(10, 18, 25, 10, 0, 10, 0, 1, 0);
+    gluLookAt(10, 18, 25,
+              10, 0, 10,
+              0, 1, 0);
 
     for (int y = 0; y < grid.getHeight(); y++) {
         for (int x = 0; x < grid.getWidth(); x++) {
             CellType type = grid.get(x, y);
-            
+
             switch (type) {
                 case CellType::Wall:
                     drawCube(x, y, 0.8f, 0.2f, 0.2f);
@@ -62,10 +77,9 @@ void Renderer::display() {
                     drawCube(x, y, 0.2f, 0.2f, 0.8f);
                     break;
                 case CellType::Path:
-                    drawCube(x, y, 0.0f, 1.0f, 1.0f); 
+                    drawCube(x, y, 0.0f, 1.0f, 1.0f);
                     break;
                 case CellType::Visited:
-
                     glPushMatrix();
                     glTranslatef(x, -0.4f, y);
                     glColor3f(1.0f, 1.0f, 0.0f);
@@ -86,47 +100,44 @@ void Renderer::display() {
 
     glutSwapBuffers();
 }
+
 void Renderer::reshape(int w, int h) {
+    windowWidth = w;
+    windowHeight = h;
+
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0, (double)w / h, 1.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
 }
-void Renderer::keyboard(unsigned char key, int, int) {
-    if (key == 13) { 
-        for (int y = 0; y < grid.getHeight(); y++) {
-            for (int x = 0; x < grid.getWidth(); x++) {
-                CellType t = grid.get(x, y);
-                if (t == CellType::Visited || t == CellType::Path) {
-                    grid.set(x, y, CellType::Empty);
-                }
-            }
-        }
 
-        std::vector<Cell> path;
+void Renderer::mouse(int button, int state, int x, int y) {
+    if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN)
+        return;
 
-        if (BFS::run(grid, startPos, goalPos, path)) {
-            for (auto& c : path) {
-                if (grid.get(c.x, c.y) != CellType::Start && grid.get(c.x, c.y) != CellType::Goal)
-                    grid.set(c.x, c.y, CellType::Path);
-            }
-            std::cout << "Caminho encontrado!\n";
-        } else {
-            std::cout << "Sem caminho.\n";
-        }
-        glutPostRedisplay();
-    }
-    else if (key == 'r' || key == 'R') {
-        for (int y = 0; y < grid.getHeight(); y++) {
-            for (int x = 0; x < grid.getWidth(); x++) {
-                CellType t = grid.get(x, y);
-                if (t != CellType::Start && t != CellType::Goal) {
-                    grid.set(x, y, CellType::Empty);
-                }
-            }
-        }
-        std::cout << "Matriz do labirinto redefinida.\n";
+    float nx = (2.0f * x) / windowWidth - 1.0f;
+    float ny = 1.0f - (2.0f * y) / windowHeight;
+
+    // câmera fixa (igual ao display)
+    float camX = 10.0f, camY = 18.0f, camZ = 25.0f;
+
+    float dirX = nx;
+    float dirY = ny - 0.3f;
+    float dirZ = -1.0f;
+
+    if (dirY == 0) return;
+
+    float t = camY / -dirY;
+
+    float worldX = camX + dirX * t;
+    float worldZ = camZ + dirZ * t;
+
+    int gridX = static_cast<int>(worldX);
+    int gridY = static_cast<int>(worldZ);
+
+    if (grid.isInside(gridX, gridY)) {
+        controller.onMouse(gridX, gridY);
         glutPostRedisplay();
     }
 }

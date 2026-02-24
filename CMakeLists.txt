@@ -16,6 +16,8 @@ add_executable(pathfinder3d
         src/model/BFS.cpp
         src/view/Renderer.cpp
         src/view/Renderer.h
+        src/controller/Controller.cpp
+        src/controller/Controller.h
 )
 
 # Platform-specific linking
