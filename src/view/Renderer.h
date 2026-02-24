@@ -30,4 +30,10 @@ private:
     void mouse(int button, int state, int x, int y);
 
     void drawCube(int x, int z, float r, float g, float b);
+
+    void drawMiniMap();
+
+    int miniMapX = 20;
+    int miniMapY = 20;
+    int miniMapSize = 200; // quadrado 200x200
 };

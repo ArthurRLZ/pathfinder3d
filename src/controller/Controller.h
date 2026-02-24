@@ -15,6 +15,10 @@ class Controller {
 public:
     Controller(Grid& grid);
 
+    void setStart(int x, int y);
+
+    void setGoal(int x, int y);
+
     void onKey(unsigned char key);
     void onMouse(int gridX, int gridY);
 

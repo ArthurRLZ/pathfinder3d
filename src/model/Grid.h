@@ -18,4 +18,6 @@ public:
 
     int getWidth() const;
     int getHeight() const;
+
+    CellType & at(int i, int y);
 };

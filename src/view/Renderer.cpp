@@ -54,9 +54,66 @@ void Renderer::drawCube(int x, int z, float r, float g, float b) {
     glPopMatrix();
 }
 
+void Renderer::drawMiniMap() {
+    int w = grid.getWidth();
+    int h = grid.getHeight();
+
+    float cellW = (float)miniMapSize / w;
+    float cellH = (float)miniMapSize / h;
+
+    // Modo 2D
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, windowWidth, windowHeight, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            CellType type = grid.get(x, y);
+
+            switch (type) {
+                case CellType::Wall:   glColor3f(0.6f, 0.1f, 0.1f); break;
+                case CellType::Start:  glColor3f(0.1f, 0.8f, 0.1f); break;
+                case CellType::Goal:   glColor3f(0.1f, 0.1f, 0.8f); break;
+                case CellType::Path:   glColor3f(0.0f, 1.0f, 1.0f); break;
+                default:               glColor3f(0.8f, 0.8f, 0.8f);
+            }
+
+            float px = miniMapX + x * cellW;
+            float py = miniMapY + y * cellH;
+
+            glBegin(GL_QUADS);
+            glVertex2f(px, py);
+            glVertex2f(px + cellW, py);
+            glVertex2f(px + cellW, py + cellH);
+            glVertex2f(px, py + cellH);
+            glEnd();
+        }
+    }
+
+    // Borda
+    glColor3f(0, 0, 0);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(miniMapX, miniMapY);
+    glVertex2f(miniMapX + miniMapSize, miniMapY);
+    glVertex2f(miniMapX + miniMapSize, miniMapY + miniMapSize);
+    glVertex2f(miniMapX, miniMapY + miniMapSize);
+    glEnd();
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void Renderer::display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
+    drawMiniMap();
 
     gluLookAt(10, 18, 25,
               10, 0, 10,
@@ -116,6 +173,17 @@ void Renderer::mouse(int button, int state, int x, int y) {
     if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN)
         return;
 
+    if (x >= miniMapX && x <= miniMapX + miniMapSize &&
+        y >= miniMapY && y <= miniMapY + miniMapSize) {
+
+        int gridX = (x - miniMapX) * grid.getWidth() / miniMapSize;
+        int gridY = (y - miniMapY) * grid.getHeight() / miniMapSize;
+
+        controller.onMouse(gridX, gridY);
+        glutPostRedisplay();
+        return;
+        }
+
     float nx = (2.0f * x) / windowWidth - 1.0f;
     float ny = 1.0f - (2.0f * y) / windowHeight;
 
@@ -140,4 +208,5 @@ void Renderer::mouse(int button, int state, int x, int y) {
         controller.onMouse(gridX, gridY);
         glutPostRedisplay();
     }
+
 }

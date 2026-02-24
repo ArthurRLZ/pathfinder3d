@@ -5,6 +5,26 @@
 Controller::Controller(Grid& g)
     : grid(g), startPos(-1, -1), goalPos(-1, -1), mode(EditMode::None) {}
 
+void Controller::setStart(int x, int y) {
+    if (grid.get(x, y) == CellType::Wall) return;
+
+    if (startPos.x >= 0)
+        grid.set(startPos.x, startPos.y, CellType::Empty);
+
+    startPos = {x, y};
+    grid.set(x, y, CellType::Start);
+}
+
+void Controller::setGoal(int x, int y) {
+    if (grid.get(x, y) == CellType::Wall) return;
+
+    if (goalPos.x >= 0)
+        grid.set(goalPos.x, goalPos.y, CellType::Empty);
+
+    goalPos = {x, y};
+    grid.set(x, y, CellType::Goal);
+}
+
 void Controller::onKey(unsigned char key) {
     switch (key) {
         case 's': case 'S':
@@ -35,29 +55,26 @@ void Controller::onKey(unsigned char key) {
 void Controller::onMouse(int x, int y) {
     if (!grid.isInside(x, y)) return;
 
-    Cell c(x, y);
-
     switch (mode) {
-        case EditMode::Start:
-            if (startPos.x >= 0)
-                grid.set(startPos.x, startPos.y, CellType::Empty);
-            startPos = c;
-            grid.set(c.x, c.y, CellType::Start);
-            break;
-
-        case EditMode::Goal:
-            if (goalPos.x >= 0)
-                grid.set(goalPos.x, goalPos.y, CellType::Empty);
-            goalPos = c;
-            grid.set(c.x, c.y, CellType::Goal);
-            break;
-
         case EditMode::Wall:
-            grid.set(c.x, c.y, CellType::Wall);
+            if (grid.get(x, y) == CellType::Wall)
+                grid.set(x, y, CellType::Empty);
+            else if (grid.get(x, y) == CellType::Empty)
+                grid.set(x, y, CellType::Wall);
             break;
 
         case EditMode::Erase:
-            grid.set(c.x, c.y, CellType::Empty);
+            if (grid.get(x, y) != CellType::Start &&
+                grid.get(x, y) != CellType::Goal)
+                grid.set(x, y, CellType::Empty);
+            break;
+
+        case EditMode::Start:
+            setStart(x, y);
+            break;
+
+        case EditMode::Goal:
+            setGoal(x, y);
             break;
 
         default:
@@ -71,25 +88,38 @@ void Controller::runBFS() {
         return;
     }
 
+    // Limpa resultados antigos
     for (int y = 0; y < grid.getHeight(); y++) {
         for (int x = 0; x < grid.getWidth(); x++) {
             if (grid.get(x, y) == CellType::Visited ||
                 grid.get(x, y) == CellType::Path) {
                 grid.set(x, y, CellType::Empty);
-            }
+                }
         }
     }
 
     std::vector<Cell> path;
-    if (BFS::run(grid, startPos, goalPos, path)) {
-        for (auto& c : path) {
-            if (grid.get(c.x, c.y) == CellType::Empty)
-                grid.set(c.x, c.y, CellType::Path);
-        }
-        std::cout << "Caminho encontrado!\n";
-    } else {
+
+    if (!BFS::run(grid, startPos, goalPos, path)) {
         std::cout << "Sem caminho.\n";
+        return;
     }
+
+    // Limpar o visited
+    for (int y = 0; y < grid.getHeight(); y++) {
+        for (int x = 0; x < grid.getWidth(); x++) {
+            if (grid.get(x, y) == CellType::Visited)
+                grid.set(x, y, CellType::Empty);
+        }
+    }
+
+    // Marca apenas o menor caminho
+    for (auto& c : path) {
+        if (grid.get(c.x, c.y) == CellType::Empty)
+            grid.set(c.x, c.y, CellType::Path);
+    }
+
+    std::cout << "Caminho mínimo encontrado! (" << path.size() << " passos)\n";
 }
 
 void Controller::resetGrid() {
