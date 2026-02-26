@@ -1,0 +1,3 @@
+/home/usuario/CLionProjects/pathfinder3d/build/CMakeFiles/pathfinder3d.dir
+/home/usuario/CLionProjects/pathfinder3d/build/CMakeFiles/edit_cache.dir
+/home/usuario/CLionProjects/pathfinder3d/build/CMakeFiles/rebuild_cache.dir
