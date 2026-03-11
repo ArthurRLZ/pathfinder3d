@@ -115,9 +115,12 @@ void Renderer::display() {
     glLoadIdentity();
     drawMiniMap();
 
-    gluLookAt(10, 18, 25,
-              10, 0, 10,
-              0, 1, 0);
+    float centerX = grid.getWidth() / 2.0f;
+    float centerZ = grid.getHeight() / 2.0f;
+
+    gluLookAt(centerX, grid.getWidth() * 0.9f, grid.getHeight() * 1.2f,
+              centerX, 0.0f, centerZ,
+              0.0f, 1.0f, 0.0f);
 
     for (int y = 0; y < grid.getHeight(); y++) {
         for (int x = 0; x < grid.getWidth(); x++) {
@@ -165,7 +168,7 @@ void Renderer::reshape(int w, int h) {
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, (double)w / h, 1.0, 100.0);
+    gluPerspective(70.0, (double)w / h, 1.0, 200.0);
     glMatrixMode(GL_MODELVIEW);
 }
 
