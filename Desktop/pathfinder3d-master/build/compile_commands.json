@@ -1,0 +1,44 @@
+[
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\app\\main.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\app\\main.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/app/main.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/app/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\model\\Grid.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\model\\Grid.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/model/Grid.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/model/Grid.cpp.obj"
+},
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\model\\BFS.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\model\\BFS.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/model/BFS.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/model/BFS.cpp.obj"
+},
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\view\\Renderer.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\view\\Renderer.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/view/Renderer.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/view/Renderer.cpp.obj"
+},
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\controller\\Controller.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\controller\\Controller.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/controller/Controller.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/controller/Controller.cpp.obj"
+},
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\view\\Camera.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\view\\Camera.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/view/Camera.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/view/Camera.cpp.obj"
+},
+{
+  "directory": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/pathfinder3d.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\pathfinder3d.dir\\src\\model\\AStar.cpp.obj -c C:\\Users\\BOLSONARO2022\\Desktop\\pathfinder3d-master\\src\\model\\AStar.cpp",
+  "file": "C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/src/model/AStar.cpp",
+  "output": "CMakeFiles/pathfinder3d.dir/src/model/AStar.cpp.obj"
+}
+]
