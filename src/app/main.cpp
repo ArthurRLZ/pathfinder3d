@@ -1,5 +1,5 @@
 #include <iostream>
-#include "model/Grid.h"
+#include "../model/Grid/Grid.h"
 #include "controller/Controller.h"
 #include "view/Renderer.h"
 #include "view/Camera.h"

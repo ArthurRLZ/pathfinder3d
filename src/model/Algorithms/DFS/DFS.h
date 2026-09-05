@@ -1,10 +1,10 @@
 #pragma once
-#include "model/ISearchAlgorithm.h"
-#include <queue>
+#include "../ISearchAlgorithm.h"
+#include <stack>
 #include <vector>
 #include <chrono>
 
-class BFS : public ISearchAlgorithm {
+class DFS : public ISearchAlgorithm {
 public:
     void start(Grid& grid, Cell start, Cell goal) override;
     bool step() override;
@@ -18,7 +18,10 @@ private:
     Cell startCell;
     Cell goalCell;
 
-    std::queue<Cell> frontier;
+    // Pilha em vez de fila: é a única diferença estrutural em relação ao BFS.
+    // Processar o topo da pilha (LIFO) faz a busca aprofundar em um ramo
+    // antes de voltar para explorar os outros, que é a essência do DFS.
+    std::stack<Cell> frontier;
     std::vector<std::vector<Cell>> parent;
 
     std::vector<Cell> path;

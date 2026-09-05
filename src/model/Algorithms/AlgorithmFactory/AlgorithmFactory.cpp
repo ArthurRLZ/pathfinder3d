@@ -1,8 +1,8 @@
-#include "model/AlgorithmFactory.h"
-#include "model/BFS.h"
-#include "model/AStar.h"
-#include "model/DFS.h"
-#include "model/Dijkstra.h"
+#include "AlgorithmFactory.h"
+#include "model/Algorithms/AStar/AStar.h"
+#include "model/Algorithms/BFS/BFS.h"
+#include "model/Algorithms/DFS/DFS.h"
+#include "model/Algorithms/Dijkstra/Dijkstra.h"
 
 std::unique_ptr<ISearchAlgorithm> createAlgorithm(AlgorithmType type) {
     switch (type) {

@@ -1,5 +1,5 @@
 #include "controller/Controller.h"
-#include "model/AlgorithmFactory.h"
+#include "../model/Algorithms/AlgorithmFactory/AlgorithmFactory.h"
 #include <iostream>
 #include <GL/glut.h>
 

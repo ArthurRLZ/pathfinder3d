@@ -1,7 +1,7 @@
 #pragma once
 
-#include "model/Grid.h"
-#include "model/Cell.h"
+#include "../model/Grid/Grid.h"
+#include "../model/Cell/Cell.h"
 #include "controller/Controller.h"
 #include "view/Camera.h"
 

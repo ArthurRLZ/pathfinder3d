@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "CellType.h"
+#include "../Cell/CellType.h"
 
 class Grid {
 private:

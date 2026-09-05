@@ -1,9 +1,9 @@
 #pragma once
 
-#include "model/Grid.h"
-#include "model/Cell.h"
-#include "model/AlgorithmType.h"
-#include "model/ISearchAlgorithm.h"
+#include "../model/Grid/Grid.h"
+#include "../model/Cell/Cell.h"
+#include "../model/Algorithms/AlgorithmType.h"
+#include "../model/Algorithms/ISearchAlgorithm.h"
 #include "view/Camera.h"
 #include <memory>
 

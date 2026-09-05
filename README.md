@@ -68,24 +68,34 @@ Arquitetura em MVC:
 ```
 src/
 ├── app/
-│   └── main.cpp          # Ponto de entrada: cria Grid, Controller, Renderer e Camera
+│   └── main.cpp                 # Ponto de entrada: cria Grid, Controller, Renderer e Camera
 ├── model/
-│   ├── Grid.h/.cpp        # Matriz de células e operações básicas de acesso
-│   ├── Cell.h             # Struct simples (x, y) usada como coordenada
-│   ├── CellType.h         # Enum dos tipos de célula (Empty, Wall, Start, Goal, Visited, Path)
-│   ├── ISearchAlgorithm.h # Interface comum para algoritmos de busca "stepáveis"
-│   ├── AlgorithmType.h    # Enum dos algoritmos disponíveis (BFS, ASTAR, DFS, DIJKSTRA)
-│   ├── AlgorithmFactory.h/.cpp # Cria a instância concreta a partir do AlgorithmType
-│   ├── BFS.h/.cpp         # Implementação de BFS sobre a interface
-│   ├── AStar.h/.cpp       # Implementação de A* sobre a interface
-│   ├── DFS.h/.cpp         # Implementação de DFS sobre a interface (mesma estrutura do BFS, com pilha em vez de fila)
-│   └── Dijkstra.h/.cpp    # Implementação de Dijkstra sobre a interface (A* com heurística 0)
+│   ├── Grid/
+│   │   └── Grid.h/.cpp           # Matriz de células e operações básicas de acesso
+│   ├── Cell/
+│   │   ├── Cell.h                # Struct simples (x, y) usada como coordenada
+│   │   └── CellType.h            # Enum dos tipos de célula (Empty, Wall, Start, Goal, Visited, Path)
+│   └── Algorithms/
+│       ├── ISearchAlgorithm.h    # Interface comum para algoritmos de busca "stepáveis"
+│       ├── AlgorithmType.h       # Enum dos algoritmos disponíveis (BFS, ASTAR, DFS, DIJKSTRA)
+│       ├── AlgorithmFactory/
+│       │   └── AlgorithmFactory.h/.cpp # Cria a instância concreta a partir do AlgorithmType
+│       ├── BFS/
+│       │   └── BFS.h/.cpp        # Implementação de BFS sobre a interface
+│       ├── AStar/
+│       │   └── AStar.h/.cpp      # Implementação de A* sobre a interface
+│       ├── DFS/
+│       │   └── DFS.h/.cpp        # Implementação de DFS sobre a interface (mesma estrutura do BFS, com pilha em vez de fila)
+│       └── Dijkstra/
+│           └── Dijkstra.h/.cpp   # Implementação de Dijkstra sobre a interface (A* com heurística 0)
 ├── controller/
-│   └── Controller.h/.cpp  # Trata input (teclado/mouse), edição da grid e orquestra a execução do algoritmo
+│   └── Controller.h/.cpp         # Trata input (teclado/mouse), edição da grid e orquestra a execução do algoritmo
 └── view/
-    ├── Camera.h/.cpp      # Câmera livre (posição + yaw/pitch)
-    └── Renderer.h/.cpp    # Loop do GLUT, desenho da cena 3D e do minimapa 2D
+    ├── Camera.h/.cpp             # Câmera livre (posição + yaw/pitch)
+    └── Renderer.h/.cpp           # Loop do GLUT, desenho da cena 3D e do minimapa 2D
 ```
+
+Cada algoritmo mora na sua própria pasta dentro de `model/Algorithms/`, junto com a fábrica (`AlgorithmFactory/`) que decide qual instanciar a partir do `AlgorithmType`. Isso deixa claro, só pela árvore de pastas, que adicionar um algoritmo novo é: criar uma pasta nova aqui dentro, implementar `ISearchAlgorithm`, e adicionar um `case` na fábrica — sem tocar em `Controller` além do `enum` e da tecla correspondente.
 
 ### Como funciona a animação da busca
 

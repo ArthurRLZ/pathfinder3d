@@ -1,6 +1,6 @@
 #pragma once
-#include "model/AlgorithmType.h"
-#include "model/ISearchAlgorithm.h"
+#include "../AlgorithmType.h"
+#include "../ISearchAlgorithm.h"
 #include <memory>
 
 // Cria a instância concreta do algoritmo de busca correspondente ao tipo

@@ -1,6 +1,6 @@
 #pragma once
-#include "model/Grid.h"
-#include "model/Cell.h"
+#include "../Grid/Grid.h"
+#include "../Cell/Cell.h"
 #include <vector>
 
 // Estatísticas coletadas durante uma execução de busca.

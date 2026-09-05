@@ -12,23 +12,23 @@ endif()
 # Add executable
 add_executable(pathfinder3d
         src/app/main.cpp
-        src/model/Grid.cpp
-        src/model/BFS.cpp
+        src/model/Grid/Grid.cpp
+        src/model/Algorithms/BFS/BFS.cpp
         src/view/Renderer.cpp
         src/view/Renderer.h
         src/controller/Controller.cpp
         src/controller/Controller.h
         src/view/Camera.cpp
         src/view/Camera.h
-        src/model/AStar.cpp
-        src/model/AStar.h
-        src/model/DFS.cpp
-        src/model/DFS.h
-        src/model/Dijkstra.cpp
-        src/model/Dijkstra.h
-        src/model/AlgorithmFactory.cpp
-        src/model/AlgorithmFactory.h
-        src/model/AlgorithmType.h
+        src/model/Algorithms/AStar/AStar.cpp
+        src/model/Algorithms/AStar/AStar.h
+        src/model/Algorithms/DFS/DFS.cpp
+        src/model/Algorithms/DFS/DFS.h
+        src/model/Algorithms/Dijkstra/Dijkstra.cpp
+        src/model/Algorithms/Dijkstra/Dijkstra.h
+        src/model/Algorithms/AlgorithmFactory/AlgorithmFactory.cpp
+        src/model/Algorithms/AlgorithmFactory/AlgorithmFactory.h
+        src/model/Algorithms/AlgorithmType.h
 )
 
 # Platform-specific linking

@@ -1,11 +1,15 @@
 #pragma once
-#include "model/ISearchAlgorithm.h"
+#include "../ISearchAlgorithm.h"
 #include <queue>
 #include <unordered_map>
 #include <vector>
 #include <chrono>
 
-class AStar : public ISearchAlgorithm {
+// Dijkstra é matematicamente A* com heurística sempre 0 (busca por custo
+// uniforme): sem "palpite" de distância até o destino, expande estritamente
+// por ordem de custo acumulado (gCost). A estrutura é praticamente idêntica
+// à do AStar; a única diferença de fato é heuristic() sempre retornar 0.
+class Dijkstra : public ISearchAlgorithm {
 public:
     void start(Grid& grid, Cell start, Cell goal) override;
     bool step() override;
@@ -18,8 +22,7 @@ private:
     struct Node {
         Cell cell;
         int gCost;
-        int hCost;
-        int fCost() const { return gCost + hCost; }
+        int fCost() const { return gCost; } // hCost é sempre 0
         bool operator>(const Node& other) const { return fCost() > other.fCost(); }
     };
 
@@ -43,7 +46,6 @@ private:
     bool finished = false;
     std::chrono::steady_clock::time_point tStart;
 
-    static int heuristic(Cell a, Cell b);
     void buildPath();
     void finish();
 };
