@@ -2,12 +2,12 @@
 
 #include "model/Grid.h"
 #include "model/Cell.h"
+#include "model/AlgorithmType.h"
 #include "model/ISearchAlgorithm.h"
 #include "view/Camera.h"
 #include <memory>
 
 enum class EditMode { None, Start, Goal, Wall, Erase };
-enum class AlgorithmType { BFS, ASTAR };
 
 // Estado da execução do algoritmo de busca ativo.
 enum class RunState { Idle, Running, Finished };

@@ -1,6 +1,5 @@
 #include "controller/Controller.h"
-#include "model/BFS.h"
-#include "model/AStar.h"
+#include "model/AlgorithmFactory.h"
 #include <iostream>
 #include <GL/glut.h>
 
@@ -25,6 +24,14 @@ void Controller::onKey(unsigned char key) {
         case '2':
             currentAlgorithm = AlgorithmType::ASTAR;
             std::cout << "Algoritmo selecionado: A-Star\n";
+            break;
+        case '3':
+            currentAlgorithm = AlgorithmType::DFS;
+            std::cout << "Algoritmo selecionado: DFS\n";
+            break;
+        case '4':
+            currentAlgorithm = AlgorithmType::DIJKSTRA;
+            std::cout << "Algoritmo selecionado: Dijkstra\n";
             break;
         case 's': case 'S':
             mode = EditMode::Start;
@@ -119,12 +126,7 @@ void Controller::startAlgorithm() {
         }
     }
 
-    if (currentAlgorithm == AlgorithmType::BFS) {
-        activeAlgorithm = std::make_unique<BFS>();
-    } else {
-        activeAlgorithm = std::make_unique<AStar>();
-    }
-
+    activeAlgorithm = createAlgorithm(currentAlgorithm);
     activeAlgorithm->start(grid, startPos, goalPos);
     runState = RunState::Running;
 

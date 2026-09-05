@@ -111,6 +111,7 @@ void Renderer::drawMiniMap() {
         "S: Start | G: Goal",
         "W: Parede | E: Borracha",
         "1: BFS | 2: A-Star",
+        "3: DFS | 4: Dijkstra",
         "ENTER: Rodar | R: Reset",
         "Setas: Andar | A/D: Girar"
     };
