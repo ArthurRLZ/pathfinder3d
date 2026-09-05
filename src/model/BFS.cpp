@@ -1,62 +1,89 @@
 #include "BFS.h"
-#include <queue>
+#include <algorithm>
 
-bool BFS::run(Grid& grid, Cell start, Cell goal, std::vector<Cell>& outPath) {
-    std::queue<Cell> q;
-    q.push(start);
+void BFS::start(Grid& g, Cell s, Cell goalIn) {
+    grid = &g;
+    startCell = s;
+    goalCell = goalIn;
 
-    int h = grid.getHeight();
-    int w = grid.getWidth();
+    path.clear();
+    stats = SearchStats{};
+    foundFlag = false;
+    finished = false;
 
-    std::vector<std::vector<Cell>> parent(
-        h, std::vector<Cell>(w, {-1, -1})
-    );
+    while (!frontier.empty()) frontier.pop();
+    frontier.push(startCell);
 
-    parent[start.y][start.x] = start;
+    int h = grid->getHeight();
+    int w = grid->getWidth();
+    parent.assign(h, std::vector<Cell>(w, Cell(-1, -1)));
+    parent[startCell.y][startCell.x] = startCell;
 
-    int dx[4] = {1, -1, 0, 0};
-    int dy[4] = {0, 0, 1, -1};
+    tStart = std::chrono::steady_clock::now();
 
-    if (start.x == goal.x && start.y == goal.y) {
-        outPath.push_back(start);
+    // Caso trivial: start e goal são a mesma célula.
+    if (startCell == goalCell) {
+        path.push_back(startCell);
+        foundFlag = true;
+        finish();
+    }
+}
+
+bool BFS::step() {
+    if (finished) return true;
+
+    if (frontier.empty()) {
+        foundFlag = false;
+        finish();
         return true;
     }
 
-    while (!q.empty()) {
-        Cell cur = q.front();
-        q.pop();
+    Cell current = frontier.front();
+    frontier.pop();
 
-        for (int i = 0; i < 4; i++) {
-            Cell next = {cur.x + dx[i], cur.y + dy[i]};
+    static const int dx[4] = {1, -1, 0, 0};
+    static const int dy[4] = {0, 0, 1, -1};
 
-            if (!grid.isInside(next.x, next.y))
-                continue;
+    for (int i = 0; i < 4; i++) {
+        Cell next(current.x + dx[i], current.y + dy[i]);
 
-            CellType value = grid.get(next.x, next.y);
+        if (!grid->isInside(next.x, next.y))
+            continue;
 
-            if (value != CellType::Empty && value != CellType::Goal)
-                continue;
+        CellType value = grid->get(next.x, next.y);
 
-            if (value == CellType::Goal) {
-                parent[next.y][next.x] = cur;
-                
-                Cell p = goal;
+        if (value != CellType::Empty && value != CellType::Goal)
+            continue;
 
-                while (!(p.x == start.x && p.y == start.y)) {
-                    outPath.push_back(p);
-                    p = parent[p.y][p.x];
-                }
-                outPath.push_back(start);
-                return true;
-            }
-
-            if (value == CellType::Empty) {
-                grid.set(next.x, next.y, CellType::Visited);
-                parent[next.y][next.x] = cur;
-                q.push(next);
-            }
+        if (value == CellType::Goal) {
+            parent[next.y][next.x] = current;
+            buildPath();
+            foundFlag = true;
+            finish();
+            return true;
         }
+
+        grid->set(next.x, next.y, CellType::Visited);
+        stats.visitedCount++;
+        parent[next.y][next.x] = current;
+        frontier.push(next);
     }
 
     return false;
+}
+
+void BFS::buildPath() {
+    Cell p = goalCell;
+    while (!(p == startCell)) {
+        path.push_back(p);
+        p = parent[p.y][p.x];
+    }
+    path.push_back(startCell);
+    std::reverse(path.begin(), path.end());
+}
+
+void BFS::finish() {
+    finished = true;
+    auto elapsed = std::chrono::steady_clock::now() - tStart;
+    stats.elapsedMs = std::chrono::duration<double, std::milli>(elapsed).count();
 }

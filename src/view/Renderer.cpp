@@ -85,10 +85,11 @@ void Renderer::drawMiniMap() {
         for (int x = 0; x < w; x++) {
             CellType type = grid.get(x, y);
             switch (type) {
-                case CellType::Wall:   glColor3f(0.6f, 0.1f, 0.1f); break;
-                case CellType::Start:  glColor3f(0.1f, 0.8f, 0.1f); break;
-                case CellType::Goal:   glColor3f(0.1f, 0.1f, 0.8f); break;
-                case CellType::Path:   glColor3f(0.0f, 1.0f, 1.0f); break;
+                case CellType::Wall:    glColor3f(0.6f, 0.1f, 0.1f); break;
+                case CellType::Start:   glColor3f(0.1f, 0.8f, 0.1f); break;
+                case CellType::Goal:    glColor3f(0.1f, 0.1f, 0.8f); break;
+                case CellType::Path:    glColor3f(0.0f, 1.0f, 1.0f); break;
+                case CellType::Visited: glColor3f(0.9f, 0.6f, 0.1f); break;
                 default:               glColor3f(0.8f, 0.8f, 0.8f);
             }
 
@@ -104,7 +105,7 @@ void Renderer::drawMiniMap() {
         }
     }
 
-    glColor3f(1.0f, 1.0f, 1.0f); 
+    glColor3f(1.0f, 1.0f, 1.0f);
     const char* legend[] = {
         "Controles:",
         "S: Start | G: Goal",
@@ -121,7 +122,7 @@ void Renderer::drawMiniMap() {
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
         }
     }
-    
+
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -151,6 +152,17 @@ void Renderer::display() {
                 case CellType::Start:  drawCube(x, y, 0.2f, 0.8f, 0.2f); break;
                 case CellType::Goal:   drawCube(x, y, 0.2f, 0.2f, 0.8f); break;
                 case CellType::Path:   drawCube(x, y, 0.0f, 1.0f, 1.0f); break;
+                case CellType::Visited:
+                    // Célula já explorada pelo algoritmo: continua "piso" (não é
+                    // obstáculo), só que pintada de laranja para mostrar o rastro
+                    // da busca em andamento.
+                    glPushMatrix();
+                    glTranslatef(x, -0.5f, y);
+                    glColor3f(0.9f, 0.6f, 0.1f);
+                    glScalef(0.95f, 0.1f, 0.95f);
+                    glutSolidCube(1.0);
+                    glPopMatrix();
+                    break;
                 default:
                     glPushMatrix();
                     glTranslatef(x, -0.5f, y);

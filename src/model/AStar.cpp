@@ -1,75 +1,93 @@
-#include "model/AStar.h"
-#include <queue>
-#include <unordered_map>
+#include "AStar.h"
 #include <cmath>
 #include <algorithm>
 
-struct AStarNode {
-    Cell cell;
-    int gCost;
-    int hCost;
-    int fCost() const { return gCost + hCost; }
-
-    bool operator>(const AStarNode& other) const {
-        return fCost() > other.fCost();
-    }
-};
-
-struct CellHash {
-    std::size_t operator()(const Cell& c) const {
-        return std::hash<int>()(c.x) ^ (std::hash<int>()(c.y) << 1);
-    }
-};
-
-int heuristic(Cell a, Cell b) {
+int AStar::heuristic(Cell a, Cell b) {
     return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
-bool AStar::run(Grid& grid, Cell start, Cell goal, std::vector<Cell>& path) {
-    std::priority_queue<AStarNode, std::vector<AStarNode>, std::greater<AStarNode>> openSet;
-    std::unordered_map<Cell, Cell, CellHash> cameFrom;
-    std::unordered_map<Cell, int, CellHash> gScore;
+void AStar::start(Grid& g, Cell s, Cell goalIn) {
+    grid = &g;
+    startCell = s;
+    goalCell = goalIn;
 
-    openSet.push({start, 0, heuristic(start, goal)});
-    gScore[start] = 0;
+    path.clear();
+    stats = SearchStats{};
+    foundFlag = false;
+    finished = false;
 
-    int dx[] = {0, 1, 0, -1};
-    int dy[] = {-1, 0, 1, 0};
+    while (!openSet.empty()) openSet.pop();
+    cameFrom.clear();
+    gScore.clear();
 
-    while (!openSet.empty()) {
-        Cell current = openSet.top().cell;
-        openSet.pop();
+    openSet.push({startCell, 0, heuristic(startCell, goalCell)});
+    gScore[startCell] = 0;
 
-        if (current == goal) {
-            Cell curr = goal;
-            while (!(curr == start)) {
-                path.push_back(curr);
-                curr = cameFrom[curr];
-            }
-            std::reverse(path.begin(), path.end());
-            return true;
+    tStart = std::chrono::steady_clock::now();
+}
+
+bool AStar::step() {
+    if (finished) return true;
+
+    if (openSet.empty()) {
+        foundFlag = false;
+        finish();
+        return true;
+    }
+
+    Cell current = openSet.top().cell;
+    openSet.pop();
+
+    if (current == goalCell) {
+        buildPath();
+        foundFlag = true;
+        finish();
+        return true;
+    }
+
+    if (current != startCell && current != goalCell &&
+        grid->get(current.x, current.y) != CellType::Visited) {
+        grid->set(current.x, current.y, CellType::Visited);
+        stats.visitedCount++;
+    }
+
+    static const int dx[4] = {0, 1, 0, -1};
+    static const int dy[4] = {-1, 0, 1, 0};
+
+    for (int i = 0; i < 4; i++) {
+        Cell neighbor(current.x + dx[i], current.y + dy[i]);
+
+        if (!grid->isInside(neighbor.x, neighbor.y) ||
+            grid->get(neighbor.x, neighbor.y) == CellType::Wall) {
+            continue;
         }
 
-        if (current != start && current != goal) {
-            grid.set(current.x, current.y, CellType::Visited);
-        }
+        int tentative_gScore = gScore[current] + 1;
 
-        for (int i = 0; i < 4; i++) {
-            Cell neighbor(current.x + dx[i], current.y + dy[i]);
-
-            if (!grid.isInside(neighbor.x, neighbor.y) || grid.get(neighbor.x, neighbor.y) == CellType::Wall) {
-                continue;
-            }
-
-            int tentative_gScore = gScore[current] + 1;
-
-            if (gScore.find(neighbor) == gScore.end() || tentative_gScore < gScore[neighbor]) {
-                cameFrom[neighbor] = current;
-                gScore[neighbor] = tentative_gScore;
-                int h = heuristic(neighbor, goal);
-                openSet.push({neighbor, tentative_gScore, h});
-            }
+        auto it = gScore.find(neighbor);
+        if (it == gScore.end() || tentative_gScore < it->second) {
+            cameFrom[neighbor] = current;
+            gScore[neighbor] = tentative_gScore;
+            int h = heuristic(neighbor, goalCell);
+            openSet.push({neighbor, tentative_gScore, h});
         }
     }
+
     return false;
+}
+
+void AStar::buildPath() {
+    Cell curr = goalCell;
+    while (!(curr == startCell)) {
+        path.push_back(curr);
+        curr = cameFrom[curr];
+    }
+    path.push_back(startCell);
+    std::reverse(path.begin(), path.end());
+}
+
+void AStar::finish() {
+    finished = true;
+    auto elapsed = std::chrono::steady_clock::now() - tStart;
+    stats.elapsedMs = std::chrono::duration<double, std::milli>(elapsed).count();
 }

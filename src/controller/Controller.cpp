@@ -4,8 +4,13 @@
 #include <iostream>
 #include <GL/glut.h>
 
+Controller* Controller::instance = nullptr;
+
 Controller::Controller(Grid& g)
-    : grid(g), startPos(-1, -1), goalPos(-1, -1), mode(EditMode::None), currentAlgorithm(AlgorithmType::BFS), camera(nullptr) {}
+    : grid(g), startPos(-1, -1), goalPos(-1, -1), mode(EditMode::None),
+      currentAlgorithm(AlgorithmType::BFS), camera(nullptr), runState(RunState::Idle) {
+    instance = this;
+}
 
 void Controller::setCamera(Camera* cam) {
     camera = cam;
@@ -44,7 +49,7 @@ void Controller::onKey(unsigned char key) {
             if (camera) camera->ProcessMouseMovement(15.0f, 0.0f);
             break;
         case 13: // ENTER
-            runAlgorithm();
+            startAlgorithm();
             break;
         case 'r': case 'R':
             resetGrid();
@@ -65,13 +70,14 @@ void Controller::onSpecialKey(int key) {
 
 void Controller::onMouse(int x, int y) {
     if (!grid.isInside(x, y)) return;
+    if (runState == RunState::Running) return; // não editar a grid durante uma busca em andamento
     switch (mode) {
         case EditMode::Wall:
             if (grid.get(x, y) == CellType::Wall) grid.set(x, y, CellType::Empty);
             else if (grid.get(x, y) == CellType::Empty) grid.set(x, y, CellType::Wall);
             break;
         case EditMode::Erase:
-            if (grid.get(x, y) != CellType::Start && grid.get(x, y) != CellType::Goal) 
+            if (grid.get(x, y) != CellType::Start && grid.get(x, y) != CellType::Goal)
                 grid.set(x, y, CellType::Empty);
             break;
         case EditMode::Start: setStart(x, y); break;
@@ -94,9 +100,14 @@ void Controller::setGoal(int x, int y) {
     grid.set(x, y, CellType::Goal);
 }
 
-void Controller::runAlgorithm() {
+void Controller::startAlgorithm() {
     if (startPos.x < 0 || goalPos.x < 0) {
         std::cout << "Defina START e GOAL primeiro!\n";
+        return;
+    }
+
+    if (runState == RunState::Running) {
+        std::cout << "Já existe uma busca em andamento.\n";
         return;
     }
 
@@ -108,34 +119,58 @@ void Controller::runAlgorithm() {
         }
     }
 
-    std::vector<Cell> path;
-    bool found = false;
-
     if (currentAlgorithm == AlgorithmType::BFS) {
-        found = BFS::run(grid, startPos, goalPos, path);
+        activeAlgorithm = std::make_unique<BFS>();
     } else {
-        found = AStar::run(grid, startPos, goalPos, path);
+        activeAlgorithm = std::make_unique<AStar>();
     }
 
-    if (!found) {
+    activeAlgorithm->start(grid, startPos, goalPos);
+    runState = RunState::Running;
+
+    std::cout << "Buscando...\n";
+    glutTimerFunc(kStepIntervalMs, timerCallback, 0);
+}
+
+void Controller::timerCallback(int) {
+    if (instance) instance->tick();
+}
+
+void Controller::tick() {
+    if (runState != RunState::Running || !activeAlgorithm) return;
+
+    bool done = activeAlgorithm->step();
+    glutPostRedisplay();
+
+    if (!done) {
+        glutTimerFunc(kStepIntervalMs, timerCallback, 0);
+        return;
+    }
+
+    runState = RunState::Finished;
+
+    if (!activeAlgorithm->found()) {
         std::cout << "Sem caminho.\n";
         return;
     }
 
-    for (int y = 0; y < grid.getHeight(); y++) {
-        for (int x = 0; x < grid.getWidth(); x++) {
-            if (grid.get(x, y) == CellType::Visited) grid.set(x, y, CellType::Empty);
+    for (const auto& c : activeAlgorithm->getPath()) {
+        CellType current = grid.get(c.x, c.y);
+        if (current == CellType::Empty || current == CellType::Visited) {
+            grid.set(c.x, c.y, CellType::Path);
         }
     }
 
-    for (auto& c : path) {
-        if (grid.get(c.x, c.y) == CellType::Empty) grid.set(c.x, c.y, CellType::Path);
-    }
-
-    std::cout << "Caminho encontrado! (" << path.size() << " passos)\n";
+    const SearchStats& stats = activeAlgorithm->getStats();
+    std::cout << "Caminho encontrado! (" << activeAlgorithm->getPath().size()
+              << " passos, " << stats.visitedCount << " celulas visitadas, "
+              << stats.elapsedMs << " ms de computacao)\n";
 }
 
 void Controller::resetGrid() {
+    activeAlgorithm.reset();
+    runState = RunState::Idle;
+
     for (int y = 0; y < grid.getHeight(); y++)
         for (int x = 0; x < grid.getWidth(); x++)
             grid.set(x, y, CellType::Empty);

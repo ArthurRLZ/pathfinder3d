@@ -2,10 +2,15 @@
 
 #include "model/Grid.h"
 #include "model/Cell.h"
+#include "model/ISearchAlgorithm.h"
 #include "view/Camera.h"
+#include <memory>
 
 enum class EditMode { None, Start, Goal, Wall, Erase };
 enum class AlgorithmType { BFS, ASTAR };
+
+// Estado da execução do algoritmo de busca ativo.
+enum class RunState { Idle, Running, Finished };
 
 class Controller {
 public:
@@ -21,6 +26,8 @@ public:
     void addWall(const Cell& c);
     void clearCell(const Cell& c);
 
+    bool isRunning() const { return runState == RunState::Running; }
+
 private:
     Grid& grid;
     Cell startPos;
@@ -29,6 +36,17 @@ private:
     AlgorithmType currentAlgorithm;
     Camera* camera;
 
-    void runAlgorithm();
+    std::unique_ptr<ISearchAlgorithm> activeAlgorithm;
+    RunState runState;
+
+    // Intervalo entre passos da animação da busca, em milissegundos.
+    // Quanto menor, mais rápida a animação.
+    static const int kStepIntervalMs = 15;
+
+    static Controller* instance;
+    static void timerCallback(int value);
+    void tick();
+
+    void startAlgorithm();
     void resetGrid();
 };

@@ -22,6 +22,7 @@ add_executable(pathfinder3d
         src/view/Camera.h
         src/model/AStar.cpp
         src/model/AStar.h
+        src/model/ISearchAlgorithm.h
 )
 
 # Platform-specific linking

@@ -1,3 +1,3 @@
-C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build/CMakeFiles/pathfinder3d.dir
-C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build/CMakeFiles/edit_cache.dir
-C:/Users/BOLSONARO2022/Desktop/pathfinder3d-master/build/CMakeFiles/rebuild_cache.dir
+/home/usuario/meus-projetos/pathfinder3d/build/CMakeFiles/pathfinder3d.dir
+/home/usuario/meus-projetos/pathfinder3d/build/CMakeFiles/edit_cache.dir
+/home/usuario/meus-projetos/pathfinder3d/build/CMakeFiles/rebuild_cache.dir
