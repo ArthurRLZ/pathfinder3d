@@ -2,6 +2,17 @@
 
 Visualizador 3D de algoritmos de busca de caminho (pathfinding) em uma grid, feito em C++17 com OpenGL/GLUT. Permite montar paredes, definir início e destino, rodar diferentes algoritmos e acompanhar a exploração acontecendo célula por célula em tempo real.
 
+## Origem
+
+Projeto idealizado para a disciplina de Computação Gráfica da UFAPE, desenvolvido por:
+
+| Nome | GitHub |
+|---|---|
+| Arthur Passos | [@ArthurRLZ](https://github.com/ArthurRLZ) |
+| Euclides Laurindo | [@euclideslaurindo](https://github.com/euclideslaurindo) |
+| Heitor Calado | [@heitorcalado](https://github.com/heitorcalado) |
+| Luis Arthur | [@lu1s-4rthur](https://github.com/lu1s-4rthur) |
+
 ## Funcionalidades atuais
 
 - Grid 2D navegável em 3D, com paredes, ponto de partida (`Start`) e destino (`Goal`) editáveis com o mouse.
