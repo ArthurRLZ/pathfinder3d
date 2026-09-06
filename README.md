@@ -115,16 +115,3 @@ Os algoritmos não rodam do início ao fim de uma vez: cada um implementa `ISear
 Essa interface foi pensada para facilitar a adição de novos algoritmos sem precisar reescrever a lógica de animação ou de coleta de métricas — só implementar `start()`/`step()` seguindo o mesmo contrato. Adicionar um algoritmo novo à interface (`Controller`, teclado, minimapa) é uma questão de: implementar a classe, adicionar um valor ao enum `AlgorithmType` e um `case` em `AlgorithmFactory::createAlgorithm`.
 
 > **Nota sobre o DFS:** diferente de BFS/A*/Dijkstra, o DFS não garante o caminho mais curto — ele só garante *algum* caminho, se existir. É esperado que o caminho encontrado pelo DFS seja mais longo (às vezes bem mais longo) que o dos outros três ao comparar resultados.
-
-## Roadmap
-
-- [x] Animar a exploração do algoritmo célula por célula em vez de só mostrar o resultado final.
-- [x] Adicionar mais algoritmos de busca (DFS, Dijkstra).
-- [ ] Trocar a câmera livre por uma câmera orbital, girando sempre em torno do centro da grid.
-- [ ] Botão para alternar para uma vista 2D top-down.
-- [ ] Menu inicial para escolher o tamanho da grid (NxN, mínimo 2x2) e selecionar quais algoritmos comparar (tempo, células visitadas, tamanho do caminho).
-- [ ] Geração automática de paredes.
-
-## Licença
-
-Sem licença definida ainda.
