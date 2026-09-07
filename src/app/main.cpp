@@ -6,10 +6,12 @@
 
 int main(int argc, char** argv) {
     Grid grid(20, 20);
-    
+
     Controller controller(grid);
     Renderer renderer(grid, controller);
-    Camera camera(10.0f, 15.0f, 25.0f, 0.0f, 1.0f, 0.0f, -90.0f, -30.0f);
+
+    Vec3 gridCenter(grid.getWidth() / 2.0f, 0.0f, grid.getHeight() / 2.0f);
+    Camera camera(gridCenter, /*radius=*/25.0f, /*azimuth=*/-90.0f, /*elevation=*/35.0f);
     controller.setCamera(&camera);
     renderer.setCamera(&camera);
 

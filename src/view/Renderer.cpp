@@ -113,11 +113,13 @@ void Renderer::drawMiniMap() {
         "1: BFS | 2: A-Star",
         "3: DFS | 4: Dijkstra",
         "ENTER: Rodar | R: Reset",
-        "Setas: Andar | A/D: Girar"
+        "Setas/A-D: Girar camera",
+        "Setas cima/baixo: Inclinar"
     };
 
     int textY = miniMapY + miniMapSize + 25;
-    for (int i = 0; i < 6; i++) {
+    int legendLines = sizeof(legend) / sizeof(legend[0]);
+    for (int i = 0; i < legendLines; i++) {
         glRasterPos2f(miniMapX, textY + (i * 20));
         for (const char* c = legend[i]; *c != '\0'; c++) {
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);

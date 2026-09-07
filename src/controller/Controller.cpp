@@ -50,10 +50,10 @@ void Controller::onKey(unsigned char key) {
             std::cout << "Modo ERASE\n";
             break;
         case 'a': case 'A':
-            if (camera) camera->ProcessMouseMovement(-15.0f, 0.0f);
+            if (camera) camera->orbitHorizontal(kOrbitStepDeg);
             break;
         case 'd': case 'D':
-            if (camera) camera->ProcessMouseMovement(15.0f, 0.0f);
+            if (camera) camera->orbitHorizontal(kOrbitStepDeg);
             break;
         case 13: // ENTER
             startAlgorithm();
@@ -66,12 +66,11 @@ void Controller::onKey(unsigned char key) {
 
 void Controller::onSpecialKey(int key) {
     if (!camera) return;
-    float velocity = 0.2f;
     switch (key) {
-        case GLUT_KEY_UP: camera->ProcessKeyboard(CameraMovement::FORWARD, velocity); break;
-        case GLUT_KEY_DOWN: camera->ProcessKeyboard(CameraMovement::BACKWARD, velocity); break;
-        case GLUT_KEY_LEFT: camera->ProcessKeyboard(CameraMovement::LEFT, velocity); break;
-        case GLUT_KEY_RIGHT: camera->ProcessKeyboard(CameraMovement::RIGHT, velocity); break;
+        case GLUT_KEY_LEFT:  camera->orbitHorizontal(-kOrbitStepDeg); break;
+        case GLUT_KEY_RIGHT: camera->orbitHorizontal(kOrbitStepDeg); break;
+        case GLUT_KEY_UP:    camera->orbitVertical(kOrbitStepDeg); break;
+        case GLUT_KEY_DOWN:  camera->orbitVertical(-kOrbitStepDeg); break;
     }
 }
 

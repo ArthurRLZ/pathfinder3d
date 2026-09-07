@@ -1,79 +1,43 @@
 #include "view/Camera.h"
-#include <cmath>
 
-const float PI = 3.14159265f;
-
-Vec3 crossProduct(Vec3 a, Vec3 b) {
-    return Vec3(a.y * b.z - a.z * b.y,
-                a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x);
+namespace {
+    const float PI = 3.14159265f;
 }
 
-Vec3 normalize(Vec3 v) {
-    float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (length == 0) return v;
-    return Vec3(v.x / length, v.y / length, v.z / length);
-}
-
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-    : Front(Vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(5.0f), MouseSensitivity(0.2f) {
-    
-    Position = Vec3(posX, posY, posZ);
-    WorldUp = Vec3(upX, upY, upZ);
-    Yaw = yaw;
-    Pitch = pitch;
-    
+Camera::Camera(Vec3 centerIn, float radiusIn, float azimuthDeg, float elevationDeg)
+    : center(centerIn), radius(radiusIn), azimuth(azimuthDeg), elevation(elevationDeg) {
     updateCameraVectors();
 }
 
-Vec3 Camera::GetTarget() {
-    return Vec3(Position.x + Front.x, Position.y + Front.y, Position.z + Front.z);
+void Camera::orbitHorizontal(float deltaDeg) {
+    azimuth += deltaDeg;
+    updateCameraVectors();
 }
 
-void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime) {
-    float velocity = MovementSpeed * deltaTime;
-    
-    if (direction == CameraMovement::FORWARD) {
-        Position.x += Front.x * velocity;
-        Position.y += Front.y * velocity;
-        Position.z += Front.z * velocity;
-    }
-    if (direction == CameraMovement::BACKWARD) {
-        Position.x -= Front.x * velocity;
-        Position.y -= Front.y * velocity;
-        Position.z -= Front.z * velocity;
-    }
-    if (direction == CameraMovement::LEFT) {
-        Position.x -= Right.x * velocity;
-        Position.y -= Right.y * velocity;
-        Position.z -= Right.z * velocity;
-    }
-    if (direction == CameraMovement::RIGHT) {
-        Position.x += Right.x * velocity;
-        Position.y += Right.y * velocity;
-        Position.z += Right.z * velocity;
-    }
-}
-
-void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch) {
-    xoffset *= MouseSensitivity;
-    yoffset *= MouseSensitivity;
-
-    Yaw += xoffset;
-    Pitch += yoffset;
-    if (constrainPitch) {
-        if (Pitch > 89.0f) Pitch = 89.0f;
-        if (Pitch < -89.0f) Pitch = -89.0f;
-    }
+void Camera::orbitVertical(float deltaDeg) {
+    elevation += deltaDeg;
+    if (elevation > kMaxElevation) elevation = kMaxElevation;
+    if (elevation < kMinElevation) elevation = kMinElevation;
     updateCameraVectors();
 }
 
 void Camera::updateCameraVectors() {
-    Vec3 front;
-    front.x = std::cos(Yaw * PI / 180.0f) * std::cos(Pitch * PI / 180.0f);
-    front.y = std::sin(Pitch * PI / 180.0f);
-    front.z = std::sin(Yaw * PI / 180.0f) * std::cos(Pitch * PI / 180.0f);
-    Front = normalize(front);
-    Right = normalize(crossProduct(Front, WorldUp));
-    Up = normalize(crossProduct(Right, Front));
+    float azRad = azimuth * PI / 180.0f;
+    float elRad = elevation * PI / 180.0f;
+
+    float cosEl = std::cos(elRad);
+    float sinEl = std::sin(elRad);
+    float cosAz = std::cos(azRad);
+    float sinAz = std::sin(azRad);
+
+    Position.x = center.x + radius * cosEl * cosAz;
+    Position.y = center.y + radius * sinEl;
+    Position.z = center.z + radius * cosEl * sinAz;
+
+    // Vetor "up" derivado analiticamente (tangente à esfera na direção de
+    // elevação crescente), em vez do Up = cross(Right, Front) tradicional.
+    // Essa fórmula não degenera quando elevation se aproxima de 90° (câmera
+    // olhando reto para baixo) — o que é essencial para a vista top-down do
+    // próximo passo, que de outra forma sofreria de gimbal lock aqui.
+    Up = Vec3(-sinEl * cosAz, cosEl, -sinEl * sinAz);
 }

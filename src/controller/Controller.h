@@ -43,6 +43,9 @@ private:
     // Quanto menor, mais rápida a animação.
     static const int kStepIntervalMs = 15;
 
+    // Quantos graus a câmera orbita por tecla pressionada.
+    static constexpr float kOrbitStepDeg = 5.0f;
+
     static Controller* instance;
     static void timerCallback(int value);
     void tick();

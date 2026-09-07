@@ -2,39 +2,43 @@
 
 #include <cmath>
 
-enum class CameraMovement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT
-};
-
 struct Vec3 {
     float x, y, z;
     Vec3(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f) : x(_x), y(_y), z(_z) {}
 };
 
+// Câmera orbital: sempre mira um ponto fixo (o centro da grid) e só pode
+// girar ao redor dele, ajustando um ângulo horizontal (azimuth) e um
+// ângulo vertical (elevation). Não há mais translação livre nem zoom.
 class Camera {
 public:
     Vec3 Position;
-    Vec3 Front;
     Vec3 Up;
-    Vec3 Right;
-    Vec3 WorldUp;
 
-    float Yaw;
-    float Pitch;
+    // center: ponto que a câmera sempre mira (tipicamente o centro da grid).
+    // radius: distância da câmera até o centro.
+    // azimuthDeg / elevationDeg: ângulos iniciais, em graus.
+    Camera(Vec3 center, float radius, float azimuthDeg, float elevationDeg);
 
-    float MovementSpeed;
-    float MouseSensitivity;
+    // Gira a câmera horizontalmente em torno do centro.
+    void orbitHorizontal(float deltaDeg);
 
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
+    // Inclina a câmera verticalmente em torno do centro (com limites, para
+    // não deixar a câmera atravessar o chão nem virar de cabeça para baixo
+    // durante a órbita livre — a vista top-down exata de 90° fica reservada
+    // para o botão dedicado do próximo passo).
+    void orbitVertical(float deltaDeg);
 
-    void ProcessKeyboard(CameraMovement direction, float deltaTime);
-    void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
-
-    Vec3 GetTarget();
+    Vec3 GetTarget() const { return center; }
 
 private:
+    Vec3 center;
+    float radius;
+    float azimuth;
+    float elevation;
+
+    static constexpr float kMinElevation = 5.0f;
+    static constexpr float kMaxElevation = 85.0f;
+
     void updateCameraVectors();
 };
