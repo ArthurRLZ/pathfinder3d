@@ -26,8 +26,15 @@ public:
     // Inclina a câmera verticalmente em torno do centro (com limites, para
     // não deixar a câmera atravessar o chão nem virar de cabeça para baixo
     // durante a órbita livre — a vista top-down exata de 90° fica reservada
-    // para o botão dedicado do próximo passo).
+    // para o botão dedicado do próximo passo). Não faz nada enquanto a
+    // vista top-down estiver travada (ver toggleTopView()).
     void orbitVertical(float deltaDeg);
+
+    // Alterna entre a órbita livre e a vista de topo (elevation travada em
+    // 90°, olhando reto para baixo). Ao travar, guarda o ângulo atual para
+    // restaurar quando destravar.
+    void toggleTopView();
+    bool isTopView() const { return topViewActive; }
 
     Vec3 GetTarget() const { return center; }
 
@@ -37,8 +44,12 @@ private:
     float azimuth;
     float elevation;
 
+    bool topViewActive = false;
+    float savedElevation = 0.0f;
+
     static constexpr float kMinElevation = 5.0f;
     static constexpr float kMaxElevation = 85.0f;
+    static constexpr float kTopViewElevation = 90.0f;
 
     void updateCameraVectors();
 };

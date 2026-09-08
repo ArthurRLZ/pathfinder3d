@@ -126,6 +126,28 @@ void Renderer::drawMiniMap() {
         }
     }
 
+    // Botão para alternar entre a órbita livre (3D) e a vista de topo (2D).
+    // Não é um widget nativo do GLUT: é um retângulo desenhado neste mesmo
+    // overlay 2D, cujo clique é detectado "na mão" em Renderer::mouse().
+    topViewButtonX = miniMapX;
+    topViewButtonY = textY + (legendLines * 20) + 15;
+
+    bool topView = controller.isTopView();
+    glColor3f(topView ? 0.2f : 0.3f, topView ? 0.6f : 0.3f, topView ? 0.9f : 0.3f);
+    glBegin(GL_QUADS);
+    glVertex2f(topViewButtonX, topViewButtonY);
+    glVertex2f(topViewButtonX + topViewButtonW, topViewButtonY);
+    glVertex2f(topViewButtonX + topViewButtonW, topViewButtonY + topViewButtonH);
+    glVertex2f(topViewButtonX, topViewButtonY + topViewButtonH);
+    glEnd();
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    const char* buttonLabel = topView ? "Vista 2D (clique: 3D)" : "Vista 3D (clique: 2D)";
+    glRasterPos2f(topViewButtonX + 10, topViewButtonY + 20);
+    for (const char* c = buttonLabel; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
+
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -197,6 +219,13 @@ void Renderer::reshape(int w, int h) {
 
 void Renderer::mouse(int button, int state, int x, int y) {
     if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN) return;
+
+    if (x >= topViewButtonX && x <= topViewButtonX + topViewButtonW &&
+        y >= topViewButtonY && y <= topViewButtonY + topViewButtonH) {
+        controller.toggleTopView();
+        glutPostRedisplay();
+        return;
+    }
 
     if (x >= miniMapX && x <= miniMapX + miniMapSize &&
         y >= miniMapY && y <= miniMapY + miniMapSize) {

@@ -40,4 +40,13 @@ private:
     int miniMapX = 20;
     int miniMapY = 20;
     int miniMapSize = 200;
+
+    // Retângulo do botão de alternar vista 2D/3D, em coordenadas de tela.
+    // Recalculado a cada frame em drawMiniMap(), para que mouse() sempre
+    // compare o clique contra a posição atual desenhada (evita desalinhar
+    // os dois se a posição mudar no futuro).
+    int topViewButtonX = 0;
+    int topViewButtonY = 0;
+    int topViewButtonW = 180;
+    int topViewButtonH = 30;
 };

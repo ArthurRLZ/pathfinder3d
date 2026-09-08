@@ -15,9 +15,23 @@ void Camera::orbitHorizontal(float deltaDeg) {
 }
 
 void Camera::orbitVertical(float deltaDeg) {
+    if (topViewActive) return; // travada na vista de topo
+
     elevation += deltaDeg;
     if (elevation > kMaxElevation) elevation = kMaxElevation;
     if (elevation < kMinElevation) elevation = kMinElevation;
+    updateCameraVectors();
+}
+
+void Camera::toggleTopView() {
+    if (topViewActive) {
+        elevation = savedElevation;
+        topViewActive = false;
+    } else {
+        savedElevation = elevation;
+        elevation = kTopViewElevation;
+        topViewActive = true;
+    }
     updateCameraVectors();
 }
 

@@ -27,6 +27,8 @@ public:
     void clearCell(const Cell& c);
 
     bool isRunning() const { return runState == RunState::Running; }
+    bool isTopView() const { return camera && camera->isTopView(); }
+    void toggleTopView();
 
 private:
     Grid& grid;

@@ -50,7 +50,7 @@ void Controller::onKey(unsigned char key) {
             std::cout << "Modo ERASE\n";
             break;
         case 'a': case 'A':
-            if (camera) camera->orbitHorizontal(kOrbitStepDeg);
+            if (camera) camera->orbitHorizontal(-kOrbitStepDeg);
             break;
         case 'd': case 'D':
             if (camera) camera->orbitHorizontal(kOrbitStepDeg);
@@ -72,6 +72,12 @@ void Controller::onSpecialKey(int key) {
         case GLUT_KEY_UP:    camera->orbitVertical(kOrbitStepDeg); break;
         case GLUT_KEY_DOWN:  camera->orbitVertical(-kOrbitStepDeg); break;
     }
+}
+
+void Controller::toggleTopView() {
+    if (!camera) return;
+    camera->toggleTopView();
+    std::cout << (camera->isTopView() ? "Vista 2D (top-down)\n" : "Vista 3D (orbital)\n");
 }
 
 void Controller::onMouse(int x, int y) {
