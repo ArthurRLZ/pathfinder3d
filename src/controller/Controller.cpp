@@ -78,6 +78,22 @@ void Controller::toggleTopView() {
     if (!camera) return;
     camera->toggleTopView();
     std::cout << (camera->isTopView() ? "Vista 2D (top-down)\n" : "Vista 3D (orbital)\n");
+    glutTimerFunc(kStepIntervalMs, cameraTimerCallback, 0);
+}
+
+void Controller::cameraTimerCallback(int) {
+    if (instance) instance->cameraTick();
+}
+
+void Controller::cameraTick() {
+    if (!camera || !camera->isAnimating()) return;
+
+    camera->animationStep(kCameraTransitionStepDeg);
+    glutPostRedisplay();
+
+    if (camera->isAnimating()) {
+        glutTimerFunc(kStepIntervalMs, cameraTimerCallback, 0);
+    }
 }
 
 void Controller::onMouse(int x, int y) {

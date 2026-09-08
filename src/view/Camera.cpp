@@ -15,7 +15,7 @@ void Camera::orbitHorizontal(float deltaDeg) {
 }
 
 void Camera::orbitVertical(float deltaDeg) {
-    if (topViewActive) return; // travada na vista de topo
+    if (topViewActive || animating) return; // travada na vista de topo ou em transição
 
     elevation += deltaDeg;
     if (elevation > kMaxElevation) elevation = kMaxElevation;
@@ -25,12 +25,23 @@ void Camera::orbitVertical(float deltaDeg) {
 
 void Camera::toggleTopView() {
     if (topViewActive) {
-        elevation = savedElevation;
+        targetElevation = savedElevation;
         topViewActive = false;
     } else {
         savedElevation = elevation;
-        elevation = kTopViewElevation;
+        targetElevation = kTopViewElevation;
         topViewActive = true;
+    }
+    animating = true;
+}
+
+void Camera::animationStep(float maxDeltaDeg) {
+    float diff = targetElevation - elevation;
+    if (std::abs(diff) <= maxDeltaDeg) {
+        elevation = targetElevation;
+        animating = false;
+    } else {
+        elevation += (diff > 0 ? maxDeltaDeg : -maxDeltaDeg);
     }
     updateCameraVectors();
 }

@@ -27,14 +27,22 @@ public:
     // não deixar a câmera atravessar o chão nem virar de cabeça para baixo
     // durante a órbita livre — a vista top-down exata de 90° fica reservada
     // para o botão dedicado do próximo passo). Não faz nada enquanto a
-    // vista top-down estiver travada (ver toggleTopView()).
+    // vista top-down estiver travada ou enquanto a transição entre vistas
+    // estiver em andamento (ver toggleTopView()/animationStep()).
     void orbitVertical(float deltaDeg);
 
     // Alterna entre a órbita livre e a vista de topo (elevation travada em
-    // 90°, olhando reto para baixo). Ao travar, guarda o ângulo atual para
-    // restaurar quando destravar.
+    // 90°, olhando reto para baixo). Não muda o ângulo na hora: define um
+    // alvo (targetElevation) e liga a animação — quem realmente aproxima a
+    // câmera do alvo, um pouco a cada chamada, é animationStep().
     void toggleTopView();
     bool isTopView() const { return topViewActive; }
+
+    // Aproxima a elevation atual de targetElevation em até maxDeltaDeg graus.
+    // Chamado repetidamente (via timer) enquanto isAnimating() for true, até
+    // a câmera "chegar" no ângulo alvo.
+    void animationStep(float maxDeltaDeg);
+    bool isAnimating() const { return animating; }
 
     Vec3 GetTarget() const { return center; }
 
@@ -46,6 +54,9 @@ private:
 
     bool topViewActive = false;
     float savedElevation = 0.0f;
+
+    float targetElevation = 0.0f;
+    bool animating = false;
 
     static constexpr float kMinElevation = 5.0f;
     static constexpr float kMaxElevation = 85.0f;

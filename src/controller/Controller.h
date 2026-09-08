@@ -48,9 +48,16 @@ private:
     // Quantos graus a câmera orbita por tecla pressionada.
     static constexpr float kOrbitStepDeg = 5.0f;
 
+    // Quantos graus a câmera avança por frame durante a transição animada
+    // entre a órbita livre e a vista de topo (menor = mais suave e lento).
+    static constexpr float kCameraTransitionStepDeg = 2.0f;
+
     static Controller* instance;
     static void timerCallback(int value);
     void tick();
+
+    static void cameraTimerCallback(int value);
+    void cameraTick();
 
     void startAlgorithm();
     void resetGrid();
