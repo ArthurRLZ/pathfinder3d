@@ -4,6 +4,7 @@
 #include "../model/Cell/Cell.h"
 #include "../model/Algorithms/AlgorithmType.h"
 #include "../model/Algorithms/ISearchAlgorithm.h"
+#include "../model/WallGenerator/WallGenerator.h"
 #include "view/Camera.h"
 #include <memory>
 #include <vector>
@@ -26,6 +27,11 @@ struct ComparisonRow {
     int pathLength;
     int visitedCount;
     double elapsedMs;
+
+    // Grid com Wall/Start/Goal/Visited/Path já pintados por essa busca —
+    // exatamente o que ficaria no minimapa se essa fosse a busca ativa.
+    // Usado para desenhar a miniatura do caminho na tela de resultados.
+    Grid snapshot;
 };
 
 class Controller {
@@ -58,6 +64,13 @@ public:
     void confirmMenu();
     void runComparison();
     void backToSimulation() { appState = AppState::Simulation; }
+    void backToMenu() {
+        pendingGridSize = grid.getWidth(); // reflete o tamanho atual, não o antigo, ao reabrir o menu
+        appState = AppState::Menu;
+    }
+
+    bool isAutoWallsEnabled() const { return autoGenerateWalls; }
+    void toggleAutoWalls() { autoGenerateWalls = !autoGenerateWalls; }
 
 private:
     Grid& grid;
@@ -74,8 +87,9 @@ private:
     int pendingGridSize = 20;
     std::array<bool, kAlgorithmCount> algorithmSelected{ {true, true, true, true} };
     std::vector<ComparisonRow> comparisonResults;
+    bool autoGenerateWalls = false;
 
-    static const int kMinGridSize = 2;
+    static const int kMinGridSize = 10;
     static const int kMaxGridSize = 60;
 
     // Intervalo entre passos da animação da busca, em milissegundos.

@@ -21,8 +21,9 @@ Projeto idealizado para a disciplina de Computação Gráfica da UFAPE, desenvol
 - Métricas impressas no console ao final de cada busca: número de passos do caminho, quantidade de células visitadas e tempo de computação.
 - Câmera orbital: sempre mira o centro da grid, girando livremente ao redor dele (sem zoom nem translação livre).
 - Botão para alternar entre a órbita livre (3D) e uma vista de topo travada (2D), no overlay ao lado do minimapa, a transição é animada, não um corte seco.
-- Menu inicial para escolher o tamanho do grid (NxN, mínimo 2x2) e marcar quais algoritmos entram na comparação.
-- Modo de comparação: roda todos os algoritmos marcados sobre a mesma grid/obstáculos/Start/Goal e mostra uma tabela com se achou caminho, tamanho do caminho, células visitadas e tempo de computação de cada um.
+- Menu inicial para escolher o tamanho do grid (NxN, mínimo 10x10) e marcar quais algoritmos entram na comparação.
+- Modo de comparação: roda todos os algoritmos marcados sobre a mesma grid/obstáculos/Start/Goal e mostra uma tabela com se achou caminho, tamanho do caminho, células visitadas, tempo de computação e uma miniatura do padrão de busca de cada um (igual o minimapa mostraria célula por célula).
+- Geração automática de paredes (opcional, via menu): cria cavernas orgânicas com autômato celular, sempre garantindo que exista caminho entre Start e Goal.
 - Minimapa 2D no canto da tela com legenda dos controles.
 
 ## Requisitos
@@ -59,9 +60,10 @@ O programa abre direto na **tela de menu**: escolha o tamanho do grid (botões `
 
 | Ação | Efeito |
 |---|---|
-| Clique em `-` / `+` | Diminui/aumenta o tamanho do grid (NxN, de 2x2 até 60x60) |
+| Clique em `-` / `+` | Diminui/aumenta o tamanho do grid (NxN, de 10x10 até 60x60) |
 | Clique num algoritmo | Marca/desmarca ele para entrar no modo de comparação |
-| Clique em "Confirmar" / `Enter` | Cria o grid no tamanho escolhido e vai para a simulação |
+| Clique em "Gerar paredes automaticamente" | Liga/desliga a geração automática de labirinto para essa grid |
+| Clique em "Confirmar" / `Enter` | Cria o grid no tamanho escolhido (gerando paredes automaticamente, se marcado) e vai para a simulação |
 
 ### Tela de simulação
 
@@ -86,6 +88,7 @@ O programa abre direto na **tela de menu**: escolha o tamanho do grid (botões `
 | Setas ↑ ↓ | Inclina a câmera (eleva/abaixa o ângulo de visão) |
 | Clique no minimapa | Equivalente a clicar na célula correspondente da grid |
 | Clique no botão "Vista 2D/3D" (abaixo da legenda) | Alterna entre a órbita livre e a vista de topo travada |
+| Clique no botão "Voltar ao menu" (abaixo do de vista 2D/3D) | Volta para a tela de menu, mantendo a grid atual até você confirmar um novo tamanho |
 
 Durante uma busca em andamento (`Enter`), edições na grid (paredes, Start, Goal) ficam bloqueadas até ela terminar ou ser cancelada com `R`. O modo comparação (`C`) roda tudo de uma vez, sem animação, é só para medir.
 
@@ -94,6 +97,7 @@ Durante uma busca em andamento (`Enter`), edições na grid (paredes, Start, Goa
 | Ação | Efeito |
 |---|---|
 | Clique em "Voltar" / qualquer tecla | Volta para a simulação, mantendo a grid como estava |
+| Clique em "Voltar ao menu" | Volta para a tela de menu, mantendo a grid atual até você confirmar um novo tamanho |
 
 ## Estrutura do projeto
 
@@ -122,6 +126,7 @@ src/
 │       │   └── DFS.h/.cpp        # Implementação de DFS sobre a interface (mesma estrutura do BFS, com pilha em vez de fila)
 │       └── Dijkstra/
 │           └── Dijkstra.h/.cpp   # Implementação de Dijkstra sobre a interface (A* com heurística 0)
+│   ├── WallGenerator.h/.cpp      # Geração automática de paredes (autômato celular) + validação de conectividade
 ├── controller/
 │   └── Controller.h/.cpp         # Trata input (teclado/mouse), edição da grid, orquestra a execução do algoritmo e o estado da aplicação (Menu/Simulation/Results)
 └── view/
@@ -137,7 +142,7 @@ Os algoritmos não rodam do início ao fim de uma vez: cada um implementa `ISear
 
 Essa interface foi pensada para facilitar a adição de novos algoritmos sem precisar reescrever a lógica de animação ou de coleta de métricas, só implementar `start()`/`step()` seguindo o mesmo contrato. Adicionar um algoritmo novo à interface (`Controller`, teclado, minimapa) é uma questão de: implementar a classe, adicionar um valor ao enum `AlgorithmType` e um `case` em `AlgorithmFactory::createAlgorithm`.
 
-> **Nota sobre o DFS:** diferente de BFS/A*/Dijkstra, o DFS não garante o caminho mais curto, ele só garante *algum* caminho, se existir. É esperado que o caminho encontrado pelo DFS seja mais longo (às vezes bem mais longo) que o dos outros três ao comparar resultados.
+> **Nota sobre o DFS:** diferente de BFS/A*/Dijkstra, o DFS não garante o caminho mais curto — ele só garante *algum* caminho, se existir. É esperado que o caminho encontrado pelo DFS seja mais longo (às vezes bem mais longo) que o dos outros três ao comparar resultados.
 
 ### Como funciona o menu e o modo de comparação
 
@@ -146,3 +151,17 @@ O `Controller` guarda um `AppState` (`Menu`, `Simulation` ou `Results`) que deci
 No menu, escolher "Confirmar" chama `Grid::resize()`, que realoca a matriz interna da própria instância de `Grid`, como o `Controller` guarda uma referência (`Grid&`), não é preciso recriar nada. A câmera também é recentralizada nesse momento (`Camera::setOrbit`), já que o centro geométrico do grid muda de tamanho junto.
 
 O modo de comparação (`C`, dentro da simulação) roda cada algoritmo marcado no menu **sem animação**: cria uma cópia independente da `Grid` atual (mesmas paredes/Start/Goal), instancia o algoritmo via `createAlgorithm()` e chama `step()` num laço fechado até terminar, em vez de usar `glutTimerFunc` como a busca animada faz. Isso mede o tempo de computação de verdade, sem o atraso artificial entre frames da animação.
+
+Antes de rodar cada algoritmo, a cópia da grid é higienizada: qualquer célula `Visited`/`Path` que tenha sobrado de uma execução interativa anterior (`Enter`) na grid real é revertida para `Empty`. Sem isso, BFS e DFS, que só andam por cima de `CellType::Empty` ou `CellType::Goal`, tratariam essas células como bloqueio (igual parede), dando resultado incorreto e inconsistente com A*/Dijkstra (que só recusam `CellType::Wall`, então atravessam esses restos sem problema). `startAlgorithm()` já faz essa mesma limpeza antes de cada corrida interativa; o modo de comparação replica a mesma lógica na cópia.
+
+Depois que cada algoritmo termina, o caminho encontrado é pintado por cima da cópia (`CellType::Path`), e essa cópia inteira, paredes, células visitadas e caminho, fica guardada em `ComparisonRow::snapshot`. É esse "retrato" que a tela de Resultados desenha como uma miniatura por linha da tabela (`Renderer::drawGridThumbnail`), usando exatamente as mesmas cores do minimapa da simulação (`CellType::Wall` vermelho escuro, `Visited` laranja, `Path` ciano, `Start`/`Goal` verde/azul). Isso deixa visualmente óbvio o padrão de busca de cada algoritmo lado a lado, a "onda" do BFS/Dijkstra, o corredor fino e sinuoso do DFS, a pegada bem mais enxuta do A*.
+
+### Como funciona a geração automática de paredes
+
+`gerarParedes()` usa autômato celular (estilo "cave generation"): preenche cada célula da grid como parede com ~42% de probabilidade, depois roda 5 passadas de suavização onde cada célula vira parede se tiver 5 ou mais vizinhas-parede (vizinhança 8-direcional), isso transforma o ruído aleatório inicial em formas orgânicas de caverna, em vez de um campo minado sem padrão.
+
+O autômato celular sozinho tende a empurrar a "massa" de parede pra perto das bordas (a regra "fora da grid conta como parede" dá um empurrão extra às células perto da borda a cada passada) e deixar o interior praticamente vazio, principalmente em grids pequenas/médias, onde "perto da borda" já é uma fração grande da área total. Pra compensar isso, depois da suavização a função espalha alguns blocos retangulares de parede pelo interior (`sprinkleInteriorBlobs`), garantindo obstáculos de verdade no meio do caminho em vez de só uma moldura oca. Grids menores que 8x8 pulam essa etapa (não sobra espaço de sobra pra blocos com margem).
+
+Como essa função roda logo após `grid.resize()` no menu, **ainda não existe Start/Goal do usuário** para reaproveitar, a própria função escolhe cantos opostos (ou a célula vazia mais próxima de cada canto, caso ele tenha virado parede) e valida a conectividade entre eles usando o `BFS` já implementado, rodado até o fim sem timer, do mesmo jeito que o modo de comparação faz. Se não houver caminho, tenta gerar tudo de novo (até 20 vezes); se mesmo assim falhar, cai para uma grid vazia em vez de deixar o usuário preso numa configuração sem solução. Isso só seria um problema em grids muito pequenas (2x2/3x3), mas o menu já não permite ir abaixo de 10x10, nesse tamanho pra cima, a geração praticamente sempre conecta de primeira.
+
+Um detalhe sutil que vale registrar: `BFS::step()` reconhece que chegou ao destino comparando o **tipo da célula** (precisa ser `CellType::Goal`), não as coordenadas. Por isso, tanto `gerarParedes()` quanto o modo de comparação precisam marcar a célula de destino como `CellType::Goal` *antes* de rodar a busca de validação, sem isso, o BFS explora a grid inteira sem nunca detectar que chegou lá.

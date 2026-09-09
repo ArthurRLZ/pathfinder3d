@@ -231,6 +231,17 @@ void Controller::confirmMenu() {
     grid.resize(pendingGridSize, pendingGridSize);
     resetGrid();
 
+    if (autoGenerateWalls) {
+        WallGenerationResult result = gerarParedes(grid);
+        startPos = result.start;
+        goalPos = result.goal;
+        if (result.success) {
+            std::cout << "Paredes geradas automaticamente.\n";
+        } else {
+            std::cout << "Nao foi possivel gerar um labirinto conectado apos varias tentativas; grid ficou vazia.\n";
+        }
+    }
+
     if (camera) {
         // O centro geométrico e o raio "confortável" mudam junto com o
         // tamanho da grid — sem isso, a câmera continuaria orbitando o
@@ -262,16 +273,46 @@ void Controller::runComparison() {
         // sem afetar a grid real nem a exibida em tela.
         Grid clone = grid;
 
+        // Limpa qualquer Visited/Path que tenha sobrado de uma execução
+        // interativa anterior (Enter) na grid real. Sem isso, BFS/DFS (que só
+        // andam por cima de CellType::Empty ou CellType::Goal) tratariam
+        // essas células como bloqueio, dando um resultado incorreto e
+        // inconsistente com A*/Dijkstra (que só recusam CellType::Wall).
+        // startAlgorithm() já faz essa mesma limpeza antes de rodar
+        // interativamente; aqui é a mesma lógica aplicada à cópia.
+        for (int y = 0; y < clone.getHeight(); y++) {
+            for (int x = 0; x < clone.getWidth(); x++) {
+                CellType t = clone.get(x, y);
+                if (t == CellType::Visited || t == CellType::Path) {
+                    clone.set(x, y, CellType::Empty);
+                }
+            }
+        }
+
         auto algo = createAlgorithm(type);
         algo->start(clone, startPos, goalPos);
         while (!algo->step()) {} // sem timer: roda tudo de uma vez, só para medir
 
-        ComparisonRow row;
-        row.type = type;
-        row.found = algo->found();
-        row.pathLength = static_cast<int>(algo->getPath().size());
-        row.visitedCount = algo->getStats().visitedCount;
-        row.elapsedMs = algo->getStats().elapsedMs;
+        // Pinta o caminho encontrado por cima do Visited, igual tick() faz na
+        // busca interativa — assim o "retrato" guardado abaixo fica idêntico
+        // ao que apareceria no minimapa se essa fosse a busca ativa.
+        if (algo->found()) {
+            for (const auto& c : algo->getPath()) {
+                CellType t = clone.get(c.x, c.y);
+                if (t == CellType::Empty || t == CellType::Visited) {
+                    clone.set(c.x, c.y, CellType::Path);
+                }
+            }
+        }
+
+        ComparisonRow row{
+            type,
+            algo->found(),
+            static_cast<int>(algo->getPath().size()),
+            algo->getStats().visitedCount,
+            algo->getStats().elapsedMs,
+            clone
+        };
         comparisonResults.push_back(row);
     }
 

@@ -29,6 +29,8 @@ add_executable(pathfinder3d
         src/model/Algorithms/AlgorithmFactory/AlgorithmFactory.cpp
         src/model/Algorithms/AlgorithmFactory/AlgorithmFactory.h
         src/model/Algorithms/AlgorithmType.h
+        src/model/WallGenerator/WallGenerator.cpp
+        src/model/WallGenerator/WallGenerator.h
 )
 
 # Platform-specific linking
