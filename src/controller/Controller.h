@@ -6,11 +6,27 @@
 #include "../model/Algorithms/ISearchAlgorithm.h"
 #include "view/Camera.h"
 #include <memory>
+#include <vector>
+#include <array>
 
 enum class EditMode { None, Start, Goal, Wall, Erase };
 
 // Estado da execução do algoritmo de busca ativo.
 enum class RunState { Idle, Running, Finished };
+
+// Em que tela o programa está. Menu = escolhendo tamanho/algoritmos antes de
+// começar; Simulation = grid 3D normal; Results = tabela de comparação.
+enum class AppState { Menu, Simulation, Results };
+
+// Uma linha da tabela de comparação: o resultado de um algoritmo rodando
+// sobre a mesma grid/obstáculos/start/goal que os outros.
+struct ComparisonRow {
+    AlgorithmType type;
+    bool found;
+    int pathLength;
+    int visitedCount;
+    double elapsedMs;
+};
 
 class Controller {
 public:
@@ -30,6 +46,19 @@ public:
     bool isTopView() const { return camera && camera->isTopView(); }
     void toggleTopView();
 
+    // --- Menu inicial e comparação de algoritmos ---
+    AppState getAppState() const { return appState; }
+    int getPendingGridSize() const { return pendingGridSize; }
+    bool isAlgorithmSelected(AlgorithmType t) const { return algorithmSelected[static_cast<int>(t)]; }
+    const std::vector<ComparisonRow>& getComparisonResults() const { return comparisonResults; }
+
+    void increaseGridSize();
+    void decreaseGridSize();
+    void toggleAlgorithmSelected(AlgorithmType t);
+    void confirmMenu();
+    void runComparison();
+    void backToSimulation() { appState = AppState::Simulation; }
+
 private:
     Grid& grid;
     Cell startPos;
@@ -40,6 +69,14 @@ private:
 
     std::unique_ptr<ISearchAlgorithm> activeAlgorithm;
     RunState runState;
+
+    AppState appState = AppState::Menu;
+    int pendingGridSize = 20;
+    std::array<bool, kAlgorithmCount> algorithmSelected{ {true, true, true, true} };
+    std::vector<ComparisonRow> comparisonResults;
+
+    static const int kMinGridSize = 2;
+    static const int kMaxGridSize = 60;
 
     // Intervalo entre passos da animação da busca, em milissegundos.
     // Quanto menor, mais rápida a animação.

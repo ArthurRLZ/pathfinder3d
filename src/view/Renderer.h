@@ -37,6 +37,25 @@ private:
     void drawCube(int x, int z, float r, float g, float b);
     void drawMiniMap();
 
+    // Tela de menu inicial (AppState::Menu): escolher tamanho do grid e
+    // quais algoritmos entram na comparação.
+    void drawMenu();
+    int menuMinusX = 0, menuMinusY = 0, menuMinusW = 40, menuMinusH = 30;
+    int menuPlusX = 0, menuPlusY = 0, menuPlusW = 40, menuPlusH = 30;
+    // Checkboxes de algoritmo: empilhados verticalmente a partir de
+    // (menuAlgoX, menuAlgoY), um a cada menuAlgoSpacing pixels.
+    int menuAlgoX = 0, menuAlgoY = 0, menuAlgoW = 220, menuAlgoH = 30, menuAlgoSpacing = 40;
+    int menuConfirmX = 0, menuConfirmY = 0, menuConfirmW = 220, menuConfirmH = 44;
+
+    // Tela de resultados (AppState::Results): tabela comparativa.
+    void drawResults();
+    int resultsBackX = 0, resultsBackY = 0, resultsBackW = 160, resultsBackH = 40;
+
+    // Desenha um retângulo clicável com rótulo, dentro de um bloco ortho2D
+    // já aberto pelo chamador. Reaproveitado pelo menu, pelos resultados e
+    // pelo botão de vista 2D/3D.
+    void drawButton(int x, int y, int w, int h, const char* label, bool highlighted);
+
     int miniMapX = 20;
     int miniMapY = 20;
     int miniMapSize = 200;

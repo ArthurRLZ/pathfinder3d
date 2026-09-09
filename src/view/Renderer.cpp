@@ -1,6 +1,8 @@
 #include "view/Renderer.h"
+#include "../model/Algorithms/AlgorithmType.h"
 #include <GL/glut.h>
 #include <cmath>
+#include <cstdio>
 
 Renderer* Renderer::instance = nullptr;
 
@@ -65,6 +67,135 @@ void Renderer::drawCube(int x, int z, float r, float g, float b) {
     glPopMatrix();
 }
 
+void Renderer::drawButton(int x, int y, int w, int h, const char* label, bool highlighted) {
+    glColor3f(highlighted ? 0.2f : 0.3f, highlighted ? 0.6f : 0.3f, highlighted ? 0.9f : 0.33f);
+    glBegin(GL_QUADS);
+    glVertex2f(x, y);
+    glVertex2f(x + w, y);
+    glVertex2f(x + w, y + h);
+    glVertex2f(x, y + h);
+    glEnd();
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glRasterPos2f(x + 8, y + h - 10);
+    for (const char* c = label; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
+}
+
+void Renderer::drawMenu() {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, windowWidth, windowHeight, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Fundo cobrindo a janela inteira, para não ver o cenário 3D atrás.
+    glColor3f(0.1f, 0.1f, 0.13f);
+    glBegin(GL_QUADS);
+    glVertex2f(0, 0);
+    glVertex2f(windowWidth, 0);
+    glVertex2f(windowWidth, windowHeight);
+    glVertex2f(0, windowHeight);
+    glEnd();
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    const char* title = "Pathfinder3D - Novo Grid";
+    glRasterPos2f(40, 50);
+    for (const char* c = title; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+
+    int gridSize = controller.getPendingGridSize();
+    char sizeText[64];
+    snprintf(sizeText, sizeof(sizeText), "Tamanho do grid: %d x %d", gridSize, gridSize);
+    glRasterPos2f(40, 100);
+    for (const char* c = sizeText; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+
+    menuMinusX = 320; menuMinusY = 82;
+    menuPlusX = 370;  menuPlusY = 82;
+    drawButton(menuMinusX, menuMinusY, menuMinusW, menuMinusH, "-", false);
+    drawButton(menuPlusX, menuPlusY, menuPlusW, menuPlusH, "+", false);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    const char* algoLabel = "Algoritmos para comparar (tecla C na simulacao):";
+    glRasterPos2f(40, 150);
+    for (const char* c = algoLabel; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+
+    menuAlgoX = 40;
+    menuAlgoY = 170;
+    for (int i = 0; i < kAlgorithmCount; i++) {
+        AlgorithmType type = kAllAlgorithmTypes[i];
+        bool selected = controller.isAlgorithmSelected(type);
+
+        char label[32];
+        snprintf(label, sizeof(label), "[%s] %s", selected ? "x" : " ", algorithmName(type));
+        drawButton(menuAlgoX, menuAlgoY + i * menuAlgoSpacing, menuAlgoW, menuAlgoH, label, selected);
+    }
+
+    menuConfirmX = menuAlgoX;
+    menuConfirmY = menuAlgoY + kAlgorithmCount * menuAlgoSpacing + 20;
+    drawButton(menuConfirmX, menuConfirmY, menuConfirmW, menuConfirmH, "Confirmar (Enter)", true);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void Renderer::drawResults() {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, windowWidth, windowHeight, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3f(0.1f, 0.1f, 0.13f);
+    glBegin(GL_QUADS);
+    glVertex2f(0, 0);
+    glVertex2f(windowWidth, 0);
+    glVertex2f(windowWidth, windowHeight);
+    glVertex2f(0, windowHeight);
+    glEnd();
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    const char* title = "Resultados da comparacao";
+    glRasterPos2f(40, 50);
+    for (const char* c = title; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+
+    const char* header = "Algoritmo      Achou?  Passos  Visitadas  Tempo(ms)";
+    glRasterPos2f(40, 90);
+    for (const char* c = header; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+
+    const auto& results = controller.getComparisonResults();
+    int rowY = 115;
+    for (const auto& row : results) {
+        char line[128];
+        snprintf(line, sizeof(line), "%-14s %-7s %-7d %-10d %.3f",
+                 algorithmName(row.type),
+                 row.found ? "Sim" : "Nao",
+                 row.pathLength,
+                 row.visitedCount,
+                 row.elapsedMs);
+        glRasterPos2f(40, rowY);
+        for (const char* c = line; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+        rowY += 22;
+    }
+
+    resultsBackX = 40;
+    resultsBackY = rowY + 20;
+    drawButton(resultsBackX, resultsBackY, resultsBackW, resultsBackH, "Voltar (qualquer tecla)", true);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void Renderer::drawMiniMap() {
     int w = grid.getWidth();
     int h = grid.getHeight();
@@ -113,6 +244,7 @@ void Renderer::drawMiniMap() {
         "1: BFS | 2: A-Star",
         "3: DFS | 4: Dijkstra",
         "ENTER: Rodar | R: Reset",
+        "C: Comparar algoritmos",
         "Setas/A-D: Girar camera",
         "Setas cima/baixo: Inclinar"
     };
@@ -158,6 +290,28 @@ void Renderer::display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
+    AppState state = controller.getAppState();
+
+    if (state == AppState::Menu) {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        drawMenu();
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
+        glutSwapBuffers();
+        return;
+    }
+
+    if (state == AppState::Results) {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        drawResults();
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
+        glutSwapBuffers();
+        return;
+    }
+
     if (camera) {
         Vec3 target = camera->GetTarget();
         gluLookAt(camera->Position.x, camera->Position.y, camera->Position.z,
@@ -199,9 +353,14 @@ void Renderer::display() {
         }
     }
 
-    // Desliga a luz rapidinho para a interface 2D nao ficar escura
+    // Desliga luz e teste de profundidade para a interface 2D: sem isso, o
+    // teste de profundidade (GL_LESS) descarta qualquer desenho posterior
+    // que sobreponha um pixel já escrito na mesma profundidade (z=0) —
+    // exatamente o bug que deixava o menu com a tela preta e vazia.
     glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
     drawMiniMap();
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
 
     glutSwapBuffers();
@@ -219,6 +378,38 @@ void Renderer::reshape(int w, int h) {
 
 void Renderer::mouse(int button, int state, int x, int y) {
     if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN) return;
+
+    AppState appState = controller.getAppState();
+
+    if (appState == AppState::Menu) {
+        if (x >= menuMinusX && x <= menuMinusX + menuMinusW &&
+            y >= menuMinusY && y <= menuMinusY + menuMinusH) {
+            controller.decreaseGridSize();
+        } else if (x >= menuPlusX && x <= menuPlusX + menuPlusW &&
+                   y >= menuPlusY && y <= menuPlusY + menuPlusH) {
+            controller.increaseGridSize();
+        } else if (x >= menuAlgoX && x <= menuAlgoX + menuAlgoW && y >= menuAlgoY) {
+            int rel = y - menuAlgoY;
+            int index = rel / menuAlgoSpacing;
+            if (index >= 0 && index < kAlgorithmCount && (rel % menuAlgoSpacing) <= menuAlgoH) {
+                controller.toggleAlgorithmSelected(kAllAlgorithmTypes[index]);
+            }
+        } else if (x >= menuConfirmX && x <= menuConfirmX + menuConfirmW &&
+                   y >= menuConfirmY && y <= menuConfirmY + menuConfirmH) {
+            controller.confirmMenu();
+        }
+        glutPostRedisplay();
+        return;
+    }
+
+    if (appState == AppState::Results) {
+        if (x >= resultsBackX && x <= resultsBackX + resultsBackW &&
+            y >= resultsBackY && y <= resultsBackY + resultsBackH) {
+            controller.backToSimulation();
+        }
+        glutPostRedisplay();
+        return;
+    }
 
     if (x >= topViewButtonX && x <= topViewButtonX + topViewButtonW &&
         y >= topViewButtonY && y <= topViewButtonY + topViewButtonH) {

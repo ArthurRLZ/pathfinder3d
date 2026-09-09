@@ -9,6 +9,12 @@ Camera::Camera(Vec3 centerIn, float radiusIn, float azimuthDeg, float elevationD
     updateCameraVectors();
 }
 
+void Camera::setOrbit(Vec3 newCenter, float newRadius) {
+    center = newCenter;
+    radius = newRadius;
+    updateCameraVectors();
+}
+
 void Camera::orbitHorizontal(float deltaDeg) {
     azimuth += deltaDeg;
     updateCameraVectors();

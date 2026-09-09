@@ -20,6 +20,11 @@ public:
     // azimuthDeg / elevationDeg: ângulos iniciais, em graus.
     Camera(Vec3 center, float radius, float azimuthDeg, float elevationDeg);
 
+    // Recentraliza a órbita (usado quando o tamanho da grid muda, já que o
+    // centro geométrico da grid muda junto). Não altera azimuth/elevation
+    // nem cancela uma transição em andamento.
+    void setOrbit(Vec3 newCenter, float newRadius);
+
     // Gira a câmera horizontalmente em torno do centro.
     void orbitHorizontal(float deltaDeg);
 

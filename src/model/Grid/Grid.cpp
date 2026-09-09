@@ -23,3 +23,9 @@ int Grid::getWidth() const {
 int Grid::getHeight() const {
     return height;
 }
+
+void Grid::resize(int w, int h) {
+    width = w;
+    height = h;
+    cells.assign(height, std::vector<CellType>(width, CellType::Empty));
+}

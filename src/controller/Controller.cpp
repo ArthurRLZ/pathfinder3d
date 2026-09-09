@@ -16,6 +16,15 @@ void Controller::setCamera(Camera* cam) {
 }
 
 void Controller::onKey(unsigned char key) {
+    if (appState == AppState::Menu) {
+        if (key == 13) confirmMenu(); // ENTER confirma o menu
+        return;
+    }
+    if (appState == AppState::Results) {
+        backToSimulation(); // qualquer tecla volta pra simulação
+        return;
+    }
+
     switch (key) {
         case '1':
             currentAlgorithm = AlgorithmType::BFS;
@@ -61,6 +70,9 @@ void Controller::onKey(unsigned char key) {
         case 'r': case 'R':
             resetGrid();
             break;
+        case 'c': case 'C':
+            runComparison();
+            break;
     }
 }
 
@@ -97,6 +109,7 @@ void Controller::cameraTick() {
 }
 
 void Controller::onMouse(int x, int y) {
+    if (appState != AppState::Simulation) return;
     if (!grid.isInside(x, y)) return;
     if (runState == RunState::Running) return; // não editar a grid durante uma busca em andamento
     switch (mode) {
@@ -200,4 +213,67 @@ void Controller::resetGrid() {
     startPos = {-1, -1};
     goalPos = {-1, -1};
     std::cout << "Grid resetado\n";
+}
+
+void Controller::increaseGridSize() {
+    if (pendingGridSize < kMaxGridSize) pendingGridSize++;
+}
+
+void Controller::decreaseGridSize() {
+    if (pendingGridSize > kMinGridSize) pendingGridSize--;
+}
+
+void Controller::toggleAlgorithmSelected(AlgorithmType t) {
+    algorithmSelected[static_cast<int>(t)] = !algorithmSelected[static_cast<int>(t)];
+}
+
+void Controller::confirmMenu() {
+    grid.resize(pendingGridSize, pendingGridSize);
+    resetGrid();
+
+    if (camera) {
+        // O centro geométrico e o raio "confortável" mudam junto com o
+        // tamanho da grid — sem isso, a câmera continuaria orbitando o
+        // centro do tamanho antigo.
+        Vec3 newCenter(pendingGridSize / 2.0f, 0.0f, pendingGridSize / 2.0f);
+        float newRadius = pendingGridSize * 1.3f + 5.0f;
+        camera->setOrbit(newCenter, newRadius);
+    }
+
+    appState = AppState::Simulation;
+}
+
+void Controller::runComparison() {
+    if (startPos.x < 0 || goalPos.x < 0) {
+        std::cout << "Defina START e GOAL antes de comparar!\n";
+        return;
+    }
+    if (runState == RunState::Running) {
+        std::cout << "Aguarde a busca atual terminar antes de comparar.\n";
+        return;
+    }
+
+    comparisonResults.clear();
+
+    for (AlgorithmType type : kAllAlgorithmTypes) {
+        if (!isAlgorithmSelected(type)) continue;
+
+        // Cópia independente da grid atual: mesmas paredes/start/goal, mas
+        // sem afetar a grid real nem a exibida em tela.
+        Grid clone = grid;
+
+        auto algo = createAlgorithm(type);
+        algo->start(clone, startPos, goalPos);
+        while (!algo->step()) {} // sem timer: roda tudo de uma vez, só para medir
+
+        ComparisonRow row;
+        row.type = type;
+        row.found = algo->found();
+        row.pathLength = static_cast<int>(algo->getPath().size());
+        row.visitedCount = algo->getStats().visitedCount;
+        row.elapsedMs = algo->getStats().elapsedMs;
+        comparisonResults.push_back(row);
+    }
+
+    appState = AppState::Results;
 }

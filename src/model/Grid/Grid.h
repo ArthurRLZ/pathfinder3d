@@ -19,5 +19,11 @@ public:
     int getWidth() const;
     int getHeight() const;
 
+    // Realoca a matriz interna para o novo tamanho, limpando tudo para
+    // CellType::Empty. Mantém a mesma instância de Grid viva (não recria o
+    // objeto), então qualquer Grid& que outra classe já guarde (o Controller,
+    // por exemplo) continua válida, só o conteúdo muda.
+    void resize(int w, int h);
+
     CellType & at(int i, int y);
 };
