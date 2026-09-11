@@ -52,6 +52,8 @@ O executável `pathfinder3d` é gerado dentro da pasta `build/`.
 ./build/pathfinder3d
 ```
 
+A janela abre em **1920x1080** por padrão (definido em `Renderer::run()`, via `glutInitWindowSize`). Para mudar, edite os dois números em `glutInitWindowSize(1920, 1080)` em `src/view/Renderer.cpp` e os valores iniciais de `windowWidth`/`windowHeight` em `src/view/Renderer.h` (mantém os dois em sincronia, já que são usados antes do primeiro redimensionamento da janela). O layout do menu e dos resultados já é recalculado a cada frame a partir do tamanho atual da janela, então funciona em qualquer resolução — só o tamanho em pixels dos cards/botões continua fixo, então em telas muito grandes eles aparecem proporcionalmente menores.
+
 O programa abre direto na **tela de menu**: escolha o tamanho do grid (botões `-`/`+`) e marque quais algoritmos vão entrar nas comparações, depois clique em "Confirmar" (ou aperte `Enter`) para ir para a simulação. Esses algoritmos marcados são justamente os que rodam quando você aperta `C` mais tarde, na simulação, mudar essa seleção exige voltar ao menu.
 
 ## Controles
@@ -98,6 +100,12 @@ Durante uma busca em andamento (`Enter`), edições na grid (paredes, Start, Goa
 |---|---|
 | Clique em "Voltar" / qualquer tecla | Volta para a simulação, mantendo a grid como estava |
 | Clique em "Voltar ao menu" | Volta para a tela de menu, mantendo a grid atual até você confirmar um novo tamanho |
+
+## Paleta de cores
+
+A interface (menu, tela de resultados, cards, botões, switches) usa uma paleta escura baseada em slate & indigo, com cantos arredondados, sombras suaves e um leve "glow" no botão em destaque, tudo desenhado à mão em OpenGL modo imediato (GLUT não tem nenhum toolkit de widgets).
+
+**As cores da própria grid (parede, início, fim, visitado, caminho) ficaram de fora desse redesign, de propósito**: usam matizes bem distintos entre si (vermelho/verde/azul/ciano/laranja) em vez de tons de uma mesma família de cor, porque aqui a cor carrega informação funcional, não é só estética, precisa dar pra reconhecer cada categoria de relance, inclusive nas miniaturas pequenas da tela de comparação. Uma versão anterior chegou a aplicar a paleta indigo também na grid, mas ficou difícil distinguir parede/visitado/vazio a olho nu nas miniaturas (todos viravam tons parecidos de cinza-azulado); por isso a decisão de manter essa parte separada.
 
 ## Estrutura do projeto
 

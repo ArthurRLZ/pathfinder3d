@@ -28,7 +28,7 @@ struct ComparisonRow {
     int visitedCount;
     double elapsedMs;
 
-    // Grid com Wall/Start/Goal/Visited/Path já pintados por essa busca —
+    // Grid com Wall/Start/Goal/Visited/Path já pintados por essa busca,
     // exatamente o que ficaria no minimapa se essa fosse a busca ativa.
     // Usado para desenhar a miniatura do caminho na tela de resultados.
     Grid snapshot;

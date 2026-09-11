@@ -2,6 +2,7 @@
 
 #include "../model/Grid/Grid.h"
 #include "../model/Cell/Cell.h"
+#include "../model/Algorithms/AlgorithmType.h"
 #include "controller/Controller.h"
 #include "view/Camera.h"
 
@@ -17,8 +18,8 @@ private:
     Controller& controller;
     Camera* camera = nullptr;
 
-    int windowWidth = 800;
-    int windowHeight = 600;
+    int windowWidth = 1920;
+    int windowHeight = 1080;
 
     static Renderer* instance;
 
@@ -43,13 +44,17 @@ private:
     // a partir de windowWidth/windowHeight, então mouse() sempre compara
     // contra a posição atual desenhada.
     void drawMenu();
-    int menuMinusX = 0, menuMinusY = 0, menuMinusW = 44, menuMinusH = 40;
-    int menuPlusX = 0, menuPlusY = 0, menuPlusW = 44, menuPlusH = 40;
-    // Checkboxes de algoritmo: empilhados verticalmente a partir de
-    // (menuAlgoX, menuAlgoY), um a cada menuAlgoSpacing pixels.
-    int menuAlgoX = 0, menuAlgoY = 0, menuAlgoW = 360, menuAlgoH = 40, menuAlgoSpacing = 50;
-    int menuAutoWallsX = 0, menuAutoWallsY = 0, menuAutoWallsW = 360, menuAutoWallsH = 40;
-    int menuConfirmX = 0, menuConfirmY = 0, menuConfirmW = 360, menuConfirmH = 50;
+    int menuMinusX = 0, menuMinusY = 0, menuMinusW = 40, menuMinusH = 40;
+    int menuPlusX = 0, menuPlusY = 0, menuPlusW = 40, menuPlusH = 40;
+    // Chips de algoritmo: uma linha só, lado a lado, cada um largo o
+    // suficiente pro próprio texto (estilo "tag selector"). X e largura de
+    // cada chip variam (nomes de tamanhos diferentes); Y e altura são
+    // compartilhados pela linha inteira.
+    int menuAlgoChipX[kAlgorithmCount] = {0};
+    int menuAlgoChipW[kAlgorithmCount] = {0};
+    int menuAlgoY = 0, menuAlgoH = 40;
+    int menuAutoWallsX = 0, menuAutoWallsY = 0, menuAutoWallsW = 360, menuAutoWallsH = 44;
+    int menuConfirmX = 0, menuConfirmY = 0, menuConfirmW = 360, menuConfirmH = 52;
 
     // Tela de resultados (AppState::Results): tabela comparativa, layout
     // centralizado.
@@ -69,6 +74,15 @@ private:
     // GLUT_BITMAP_HELVETICA_12 para botões pequenos/secundários).
     void drawButton(int x, int y, int w, int h, const char* label, bool highlighted, void* font);
     int textWidth(void* font, const char* text);
+
+    // Desenha um retângulo com cantos arredondados, preenchido com a cor
+    // (r,g,b,a) dada. 'a' < 1 exige GL_BLEND habilitado pelo chamador (já
+    // ligado em todo o desenho 2D de overlay — ver display()).
+    void drawRoundedRect(float x, float y, float w, float h, float radius, float r, float g, float b, float a = 1.0f);
+
+    // Desenha um switch estilo iOS/Material: uma "trilha" em pílula e uma
+    // bolinha que fica na ponta esquerda (desligado) ou direita (ligado).
+    void drawToggleSwitch(float x, float y, float w, float h, bool on);
 
     int miniMapX = 20;
     int miniMapY = 20;

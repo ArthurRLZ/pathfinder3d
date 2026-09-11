@@ -19,8 +19,8 @@ private:
     Cell goalCell;
 
     // Pilha em vez de fila: é a única diferença estrutural em relação ao BFS.
-    // Processar o topo da pilha (LIFO) faz a busca aprofundar em um ramo
-    // antes de voltar para explorar os outros, que é a essência do DFS.
+    // Processar o topo (LIFO) faz a busca aprofundar num ramo antes de
+    // voltar pros outros, a essência do DFS.
     std::stack<Cell> frontier;
     std::vector<std::vector<Cell>> parent;
 

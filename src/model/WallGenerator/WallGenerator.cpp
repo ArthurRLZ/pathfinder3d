@@ -53,25 +53,19 @@ void smoothStep(Grid& grid) {
             grid.set(x, y, next[y][x]);
 }
 
-// A suavização por autômato celular sozinha tende a empurrar toda a "massa"
-// de parede para perto das bordas (a regra "fora da grid conta como parede"
-// dá um empurrão extra às células perto da borda a cada passada), deixando
-// o interior quase todo vazio — principalmente em grids pequenas/médias,
-// onde "perto da borda" é uma fração grande da área total. Isso faz o
-// resultado parecer "paredes só na moldura, sem influência real" mesmo
-// depois de ajustar densidade/iterações.
+// A suavização por autômato celular sozinha tende a empurrar a parede pra
+// perto das bordas (a regra "fora da grid conta como parede" favorece a
+// borda a cada passada), deixando o interior quase vazio, mais notável em
+// grids pequenas/médias, onde "perto da borda" é boa parte da área total.
 //
-// Pra compensar, espalhamos alguns blocos retangulares de parede pelo
-// interior depois da suavização — mantém a textura orgânica das bordas
-// (vinda do autômato celular) e garante obstáculos de verdade no meio do
-// caminho, não só uma moldura oca.
+// Por isso espalhamos blocos retangulares de parede pelo interior depois da
+// suavização: mantém a textura orgânica das bordas e garante obstáculos
+// reais no meio do caminho, não só uma moldura oca.
 void sprinkleInteriorBlobs(Grid& grid) {
     int w = grid.getWidth();
     int h = grid.getHeight();
 
-    // Grids muito pequenas não têm espaço de sobra para blocos de 2x2+ com
-    // margem; deixa só o autômato celular (ou o fallback de grid vazia,
-    // se nem isso conectar) cuidar delas.
+    // Grids muito pequenas não têm espaço pra blocos de 2x2+ com margem.
     if (w < 8 || h < 8) return;
 
     int blobCount = std::max(4, (w * h) / 40);
@@ -120,13 +114,11 @@ Cell nearestEmptyCell(Grid& grid, int startX, int startY) {
     return Cell(startX, startY); // não deveria acontecer se houver ao menos 1 célula vazia
 }
 
-// Roda o BFS já existente até o fim (sem timer/animação) só para checar se
-// existe caminho entre start e goal. Importante: BFS::step() reconhece que
-// chegou ao destino comparando o CellType da célula (precisa ser
-// CellType::Goal), não as coordenadas — por isso marcamos o destino
-// temporariamente antes de rodar, e desfazemos a marca ao final, já que
-// quem chama isso ainda decide o que fazer com a grid (tentar de novo,
-// pintar Start/Goal de verdade, etc).
+// Roda o BFS já existente até o fim (sem timer/animação) só pra checar se
+// existe caminho entre start e goal. BFS::step() reconhece o destino pelo
+// CellType da célula (precisa ser CellType::Goal), não pelas coordenadas,
+// por isso marcamos o destino temporariamente antes de rodar, e desfazemos
+// a marca ao final.
 bool isConnected(Grid& grid, Cell start, Cell goal) {
     CellType originalGoalType = grid.get(goal.x, goal.y);
     grid.set(goal.x, goal.y, CellType::Goal);

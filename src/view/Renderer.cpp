@@ -19,7 +19,7 @@ void Renderer::run(int argc, char** argv) {
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(1920, 1080);
     glutCreateWindow("Pathfinder 3D");
 
     glEnable(GL_DEPTH_TEST);
@@ -64,7 +64,15 @@ void Renderer::drawCube(int x, int z, float r, float g, float b) {
     glPushMatrix();
     glTranslatef(x, 0.0f, z);
     glColor3f(r, g, b);
-    glutSolidCube(0.95);
+    glutSolidCube(0.93);
+    // Borda escura desenhada como wireframe ligeiramente maior que o cubo
+    // sólido, separando visualmente células adjacentes sem precisar de
+    // textura (estilo "flat shaded + outline").
+    glDisable(GL_LIGHTING);
+    glLineWidth(1.0f);
+    glColor3f(0.024f, 0.031f, 0.059f); // slate-950
+    glutWireCube(0.96);
+    glEnable(GL_LIGHTING);
     glPopMatrix();
 }
 
@@ -76,36 +84,79 @@ int Renderer::textWidth(void* font, const char* text) {
     return w;
 }
 
+void Renderer::drawRoundedRect(float x, float y, float w, float h, float radius, float r, float g, float b, float a) {
+    if (radius > w / 2.0f) radius = w / 2.0f;
+    if (radius > h / 2.0f) radius = h / 2.0f;
+    if (radius < 0.0f) radius = 0.0f;
+
+    const int segs = 8; // segmentos por canto arredondado
+    const float pi = 3.14159265f;
+
+    struct Corner { float cx, cy, fromDeg, toDeg; };
+    Corner corners[4] = {
+        { x + w - radius, y + radius,       270.0f, 360.0f }, // topo-direita
+        { x + w - radius, y + h - radius,     0.0f,  90.0f }, // baixo-direita
+        { x + radius,     y + h - radius,    90.0f, 180.0f }, // baixo-esquerda
+        { x + radius,     y + radius,       180.0f, 270.0f }, // topo-esquerda
+    };
+
+    glColor4f(r, g, b, a);
+    glBegin(GL_POLYGON);
+    for (auto& c : corners) {
+        for (int i = 0; i <= segs; i++) {
+            float t = c.fromDeg + (c.toDeg - c.fromDeg) * (i / (float)segs);
+            float rad = t * pi / 180.0f;
+            glVertex2f(c.cx + cosf(rad) * radius, c.cy + sinf(rad) * radius);
+        }
+    }
+    glEnd();
+}
+
+void Renderer::drawToggleSwitch(float x, float y, float w, float h, bool on) {
+    float radius = h / 2.0f;
+
+    // Paleta slate & indigo: ON em indigo-500 (acento primário),
+    // OFF em slate-600 (neutro escuro, mas ainda distinto do fundo slate-800).
+    if (on) drawRoundedRect(x, y, w, h, radius, 0.388f, 0.396f, 0.945f, 1.0f);   // indigo-500
+    else    drawRoundedRect(x, y, w, h, radius, 0.278f, 0.333f, 0.412f, 1.0f);   // slate-600
+
+    // Bolinha (knob): fica encostada na esquerda quando desligado, na
+    // direita quando ligado — a metáfora visual padrão de toggle switch.
+    float knobRadius = radius - 3.0f;
+    float knobCx = on ? (x + w - radius) : (x + radius);
+    float knobCy = y + radius;
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(knobCx, knobCy);
+    const int segs = 20;
+    for (int i = 0; i <= segs; i++) {
+        float a = i * 2.0f * 3.14159265f / segs;
+        glVertex2f(knobCx + cosf(a) * knobRadius, knobCy + sinf(a) * knobRadius);
+    }
+    glEnd();
+}
+
 void Renderer::drawButton(int x, int y, int w, int h, const char* label, bool highlighted, void* font) {
-    // Borda sutil ao redor do botão: dá uma sensação de profundidade/contorno
-    // em vez do retângulo plano "cru" de antes.
-    glColor3f(0.04f, 0.04f, 0.06f);
-    glBegin(GL_QUADS);
-    glVertex2f(x - 2, y - 2);
-    glVertex2f(x + w + 2, y - 2);
-    glVertex2f(x + w + 2, y + h + 2);
-    glVertex2f(x - 2, y + h + 2);
-    glEnd();
+    float radius = h / 3.0f;
+    if (radius > 14.0f) radius = 14.0f;
 
-    if (highlighted) glColor3f(0.24f, 0.55f, 0.92f);
-    else glColor3f(0.22f, 0.23f, 0.27f);
-    glBegin(GL_QUADS);
-    glVertex2f(x, y);
-    glVertex2f(x + w, y);
-    glVertex2f(x + w, y + h);
-    glVertex2f(x, y + h);
-    glEnd();
+    // Halo indigo suave atrás do botão destacado, puxando o olhar pra ação
+    // primária (alpha baixo pra não virar neon).
+    if (highlighted) drawRoundedRect(x - 4, y - 4, w + 8, h + 8, radius + 4, 0.388f, 0.396f, 0.945f, 0.18f);
 
-    // Friso mais claro na borda superior, imitando um leve efeito "elevado"
-    // (bevel) comum em botões de UI flat modernas.
-    if (highlighted) glColor3f(0.45f, 0.72f, 1.0f);
-    else glColor3f(0.34f, 0.36f, 0.40f);
-    glBegin(GL_LINES);
-    glVertex2f(x, y + 1);
-    glVertex2f(x + w, y + 1);
-    glEnd();
+    // Sombra deslocada pra baixo/direita, dando sensação de elevação.
+    drawRoundedRect(x + 2, y + 4, w, h, radius, 0.0f, 0.0f, 0.0f, 0.30f);
 
-    glColor3f(1.0f, 1.0f, 1.0f);
+    // Corpo do botão: indigo-600 (destacado/primário) ou slate-700 (normal).
+    if (highlighted) drawRoundedRect(x, y, w, h, radius, 0.310f, 0.275f, 0.898f, 1.0f); // indigo-600
+    else             drawRoundedRect(x, y, w, h, radius, 0.200f, 0.255f, 0.333f, 1.0f); // slate-700
+
+    // Gradiente sutil: metade de cima num tom mais claro ("glassy top").
+    if (highlighted) drawRoundedRect(x + 1.5f, y + 1.5f, w - 3.0f, h / 2.0f - 1.5f, radius * 0.7f, 1.0f, 1.0f, 1.0f, 0.14f);
+    else             drawRoundedRect(x + 1.5f, y + 1.5f, w - 3.0f, h / 2.0f - 1.5f, radius * 0.7f, 1.0f, 1.0f, 1.0f, 0.06f);
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     int tw = textWidth(font, label);
     int fontHeight = (font == GLUT_BITMAP_HELVETICA_18) ? 18 : 12;
     float textX = x + (w - tw) / 2.0f;
@@ -126,26 +177,39 @@ void Renderer::drawMenu() {
     glPushMatrix();
     glLoadIdentity();
 
-    // Fundo cobrindo a janela inteira, para não ver o cenário 3D atrás.
-    glColor3f(0.09f, 0.09f, 0.12f);
+    // Fundo com gradiente vertical slate-900 (topo) → slate-950 (base).
     glBegin(GL_QUADS);
-    glVertex2f(0, 0);
-    glVertex2f(windowWidth, 0);
-    glVertex2f(windowWidth, windowHeight);
-    glVertex2f(0, windowHeight);
+    glColor3f(0.059f, 0.090f, 0.165f); glVertex2f(0, 0); glVertex2f(windowWidth, 0);              // slate-900 topo
+    glColor3f(0.024f, 0.031f, 0.059f); glVertex2f(windowWidth, windowHeight); glVertex2f(0, windowHeight); // slate-950 base
     glEnd();
 
     // Painel central: tudo é posicionado a partir de panelX (calculado pra
     // ficar sempre centralizado na janela, mesmo se ela for redimensionada).
-    int panelWidth = menuAlgoW;
+    int panelWidth = menuAutoWallsW;
+    int panelPaddingX = 36;
+    int cardWidth = panelWidth + panelPaddingX * 2;
     int panelX = (windowWidth - panelWidth) / 2;
 
     // Altura total do conteúdo, calculada de antemão só para poder
-    // centralizar o bloco inteiro verticalmente também.
-    int contentHeight = 40  /*título*/ + 30 /*subtítulo*/ + 55 /*seletor de tamanho*/
-                       + 30 /*rótulo algoritmos*/ + kAlgorithmCount * menuAlgoSpacing
-                       + 20 + menuAutoWallsH + 25 + menuConfirmH;
-    int y = std::max(30, (windowHeight - contentHeight) / 2);
+    // centralizar o bloco inteiro verticalmente (e desenhar o card do
+    // tamanho certo por baixo).
+    int contentHeight = 34 /*título*/ + 28 /*subtítulo*/ + 20 /*espaço*/ + menuMinusH /*seletor*/
+                       + 30 /*rótulo algoritmos*/ + 20 /*espaço*/ + menuAlgoH
+                       + 22 + menuAutoWallsH + 22 + menuConfirmH;
+    int cardPaddingY = 34;
+    int cardHeight = contentHeight + cardPaddingY * 2;
+    int cardY = std::max(20, (windowHeight - cardHeight) / 2);
+    int cardX = panelX - panelPaddingX;
+
+    // Sombra do card (p/ sensação de elevação), corpo em slate-800, e
+    // listra de destaque indigo-500 no topo.
+    drawRoundedRect(cardX + 4, cardY + 8, cardWidth, cardHeight, 18.0f, 0.0f, 0.0f, 0.0f, 0.40f);
+    drawRoundedRect(cardX, cardY, cardWidth, cardHeight, 18.0f, 0.118f, 0.161f, 0.231f, 1.0f); // slate-800
+    drawRoundedRect(cardX, cardY, cardWidth, 4, 18.0f, 0.388f, 0.396f, 0.945f, 0.95f);          // indigo-500 topo
+    // Realce sutil na metade de cima do card, pra não ficar totalmente chapado.
+    drawRoundedRect(cardX + 2, cardY + 2, cardWidth - 4, cardHeight / 2.5f, 16.0f, 1.0f, 1.0f, 1.0f, 0.025f);
+
+    int y = cardY + cardPaddingY;
 
     glColor3f(1.0f, 1.0f, 1.0f);
     {
@@ -154,41 +218,45 @@ void Renderer::drawMenu() {
         glRasterPos2f(panelX + (panelWidth - tw) / 2.0f, y);
         for (const char* c = title; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
     }
-    y += 40;
+    y += 34;
 
-    glColor3f(0.75f, 0.75f, 0.8f);
+    glColor3f(0.580f, 0.639f, 0.722f); // slate-400 — subtítulo secundário
     {
         const char* subtitle = "Configurar novo grid";
         int tw = textWidth(GLUT_BITMAP_HELVETICA_18, subtitle);
         glRasterPos2f(panelX + (panelWidth - tw) / 2.0f, y);
         for (const char* c = subtitle; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
     }
-    y += 45;
+    y += 28 + 20;
 
-    // Seletor de tamanho: "-" [ NxN ] "+", centralizado como uma linha só.
+    // Seletor de tamanho: uma "trilha" em pílula com "-" e "+" encaixados
+    // nas pontas e o número no meio, visualmente uma peça só, em vez de
+    // três retângulos soltos.
     int gridSize = controller.getPendingGridSize();
     char sizeText[32];
     snprintf(sizeText, sizeof(sizeText), "%d x %d", gridSize, gridSize);
     int sizeTextW = textWidth(GLUT_BITMAP_HELVETICA_18, sizeText);
-    int sizeLabelW = 140; // espaço reservado pro número, entre os botões -/+
-    int rowW = menuMinusW + 12 + sizeLabelW + 12 + menuPlusW;
+    int sizeLabelW = 140;
+    int rowW = menuMinusW + sizeLabelW + menuPlusW;
     int rowX = panelX + (panelWidth - rowW) / 2;
+
+    drawRoundedRect(rowX, y, rowW, menuMinusH, menuMinusH / 2.0f, 0.200f, 0.255f, 0.333f, 1.0f); // slate-700
 
     menuMinusX = rowX;
     menuMinusY = y;
     drawButton(menuMinusX, menuMinusY, menuMinusW, menuMinusH, "-", false, GLUT_BITMAP_HELVETICA_18);
 
     glColor3f(1.0f, 1.0f, 1.0f);
-    glRasterPos2f(rowX + menuMinusW + 12 + (sizeLabelW - sizeTextW) / 2.0f, y + menuMinusH / 2.0f + 6);
+    glRasterPos2f(rowX + menuMinusW + (sizeLabelW - sizeTextW) / 2.0f, y + menuMinusH / 2.0f + 6);
     for (const char* c = sizeText; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
 
-    menuPlusX = rowX + menuMinusW + 12 + sizeLabelW + 12;
+    menuPlusX = rowX + menuMinusW + sizeLabelW;
     menuPlusY = y;
     drawButton(menuPlusX, menuPlusY, menuPlusW, menuPlusH, "+", false, GLUT_BITMAP_HELVETICA_18);
 
-    y += menuMinusH + 25;
+    y += menuMinusH + 30;
 
-    glColor3f(0.75f, 0.75f, 0.8f);
+    glColor3f(0.580f, 0.639f, 0.722f); // slate-400
     {
         const char* algoLabel = "Algoritmos para comparar (tecla C na simulacao)";
         int tw = textWidth(GLUT_BITMAP_HELVETICA_12, algoLabel);
@@ -197,27 +265,56 @@ void Renderer::drawMenu() {
     }
     y += 20;
 
-    menuAlgoX = panelX;
+    // Chips de algoritmo: uma linha só, cada chip do tamanho do próprio
+    // texto + preenchimento (estilo "tag selector"), centralizados como um
+    // grupo. Bem mais compacto que 4 barras inteiras empilhadas.
     menuAlgoY = y;
-    for (int i = 0; i < kAlgorithmCount; i++) {
-        AlgorithmType type = kAllAlgorithmTypes[i];
-        bool selected = controller.isAlgorithmSelected(type);
+    {
+        const int chipPadding = 26;
+        const int chipGap = 12;
+        int totalChipsW = 0;
+        int chipW[kAlgorithmCount];
 
-        char label[32];
-        snprintf(label, sizeof(label), "[%s]  %s", selected ? "x" : " ", algorithmName(type));
-        drawButton(menuAlgoX, menuAlgoY + i * menuAlgoSpacing, menuAlgoW, menuAlgoH, label, selected, GLUT_BITMAP_HELVETICA_18);
+        for (int i = 0; i < kAlgorithmCount; i++) {
+            const char* name = algorithmName(kAllAlgorithmTypes[i]);
+            chipW[i] = textWidth(GLUT_BITMAP_HELVETICA_18, name) + chipPadding * 2;
+            totalChipsW += chipW[i];
+        }
+        totalChipsW += chipGap * (kAlgorithmCount - 1);
+
+        int chipX = panelX + (panelWidth - totalChipsW) / 2;
+        for (int i = 0; i < kAlgorithmCount; i++) {
+            AlgorithmType type = kAllAlgorithmTypes[i];
+            bool selected = controller.isAlgorithmSelected(type);
+
+            menuAlgoChipX[i] = chipX;
+            menuAlgoChipW[i] = chipW[i];
+            drawButton(chipX, menuAlgoY, chipW[i], menuAlgoH, algorithmName(type), selected, GLUT_BITMAP_HELVETICA_18);
+
+            chipX += chipW[i] + chipGap;
+        }
     }
-    y = menuAlgoY + kAlgorithmCount * menuAlgoSpacing + 10;
+    y = menuAlgoY + menuAlgoH + 22;
 
+    // Linha do toggle de paredes automáticas: rótulo à esquerda, switch à
+    // direita, dentro de uma faixa sutilmente destacada do card.
     menuAutoWallsX = panelX;
     menuAutoWallsY = y;
     {
         bool autoWalls = controller.isAutoWallsEnabled();
-        char label[48];
-        snprintf(label, sizeof(label), "[%s]  Gerar paredes automaticamente", autoWalls ? "x" : " ");
-        drawButton(menuAutoWallsX, menuAutoWallsY, menuAutoWallsW, menuAutoWallsH, label, autoWalls, GLUT_BITMAP_HELVETICA_18);
+        drawRoundedRect(menuAutoWallsX, menuAutoWallsY, menuAutoWallsW, menuAutoWallsH, 10.0f, 0.200f, 0.255f, 0.333f, 1.0f); // slate-700
+
+        glColor3f(1.0f, 1.0f, 1.0f);
+        const char* label = "Gerar paredes automaticamente";
+        glRasterPos2f(menuAutoWallsX + 16, menuAutoWallsY + menuAutoWallsH / 2.0f + 5);
+        for (const char* c = label; *c != '\0'; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+
+        float switchW = 46, switchH = 24;
+        float switchX = menuAutoWallsX + menuAutoWallsW - switchW - 16;
+        float switchY = menuAutoWallsY + (menuAutoWallsH - switchH) / 2.0f;
+        drawToggleSwitch(switchX, switchY, switchW, switchH, autoWalls);
     }
-    y += menuAutoWallsH + 25;
+    y += menuAutoWallsH + 22;
 
     menuConfirmX = panelX;
     menuConfirmY = y;
@@ -239,12 +336,11 @@ void Renderer::drawResults() {
     glPushMatrix();
     glLoadIdentity();
 
-    glColor3f(0.09f, 0.09f, 0.12f);
+    // Fundo com gradiente vertical slate-900 → slate-950, igual ao menu,
+    // para manter consistência visual entre telas.
     glBegin(GL_QUADS);
-    glVertex2f(0, 0);
-    glVertex2f(windowWidth, 0);
-    glVertex2f(windowWidth, windowHeight);
-    glVertex2f(0, windowHeight);
+    glColor3f(0.059f, 0.090f, 0.165f); glVertex2f(0, 0); glVertex2f(windowWidth, 0);
+    glColor3f(0.024f, 0.031f, 0.059f); glVertex2f(windowWidth, windowHeight); glVertex2f(0, windowHeight);
     glEnd();
 
     const auto& results = controller.getComparisonResults();
@@ -273,6 +369,18 @@ void Renderer::drawResults() {
     int contentHeight = 55 /*título*/ + headerH + rowCount * rowH + 30 + resultsBackH;
     int y = std::max(20, (windowHeight - contentHeight) / 2);
 
+    // Card de fundo, mesmo tratamento do menu: sombra profunda, corpo
+    // slate-800, listra de destaque indigo-500 no topo, glassy top sutil.
+    int cardPaddingX = 30, cardPaddingY = 26;
+    int cardWidth = std::max(tableWidth, buttonsRowWidth) + cardPaddingX * 2;
+    int cardHeight = contentHeight + cardPaddingY * 2;
+    int cardX = (windowWidth - cardWidth) / 2;
+    int cardY = y - cardPaddingY;
+    drawRoundedRect(cardX + 4, cardY + 8, cardWidth, cardHeight, 18.0f, 0.0f, 0.0f, 0.0f, 0.40f);
+    drawRoundedRect(cardX, cardY, cardWidth, cardHeight, 18.0f, 0.118f, 0.161f, 0.231f, 1.0f); // slate-800
+    drawRoundedRect(cardX, cardY, cardWidth, 4, 18.0f, 0.388f, 0.396f, 0.945f, 0.95f);          // indigo-500 topo
+    drawRoundedRect(cardX + 2, cardY + 2, cardWidth - 4, cardHeight / 2.5f, 16.0f, 1.0f, 1.0f, 1.0f, 0.025f);
+
     glColor3f(1.0f, 1.0f, 1.0f);
     {
         const char* title = "Resultados da comparacao";
@@ -287,8 +395,9 @@ void Renderer::drawResults() {
     colX[0] = tableX;
     for (int i = 1; i < 6; i++) colX[i] = colX[i - 1] + colW[i - 1];
 
-    // Fundo do cabeçalho + rótulos centralizados em cada coluna.
-    glColor3f(0.16f, 0.18f, 0.22f);
+    // Fundo do cabeçalho em slate-700, neutro escuro que separa o header
+    // das linhas de dados sem brigar com a cor indigo do card.
+    glColor3f(0.200f, 0.255f, 0.333f); // slate-700
     glBegin(GL_QUADS);
     glVertex2f(tableX, y);
     glVertex2f(tableX + tableWidth, y);
@@ -296,7 +405,7 @@ void Renderer::drawResults() {
     glVertex2f(tableX, y + headerH);
     glEnd();
 
-    glColor3f(0.8f, 0.82f, 0.88f);
+    glColor3f(0.886f, 0.910f, 0.941f); // slate-200 — texto do header, claro o bastante p/ contraste no slate-700
     for (int i = 0; i < 6; i++) {
         int tw = textWidth(GLUT_BITMAP_HELVETICA_12, headers[i]);
         glRasterPos2f(colX[i] + (colW[i] - tw) / 2.0f, y + headerH / 2.0f + 4);
@@ -309,8 +418,9 @@ void Renderer::drawResults() {
     for (int r = 0; r < rowCount; r++) {
         const auto& row = results[r];
 
-        if (r % 2 == 0) glColor3f(0.14f, 0.15f, 0.18f);
-        else glColor3f(0.10f, 0.11f, 0.14f);
+        // Linhas alternadas em slate-800 (par) e um tom mais escuro (ímpar).
+        if (r % 2 == 0) glColor3f(0.118f, 0.161f, 0.231f);  // slate-800
+        else             glColor3f(0.090f, 0.118f, 0.165f); // slate-800 mais escuro
         glBegin(GL_QUADS);
         glVertex2f(tableX, y);
         glVertex2f(tableX + tableWidth, y);
@@ -344,7 +454,9 @@ void Renderer::drawResults() {
     // Bordas da tabela: verticais entre colunas, horizontais entre linhas —
     // isso é o que faz o resultado parecer uma tabela de verdade, em vez de
     // texto alinhado por espaços.
-    glColor3f(0.32f, 0.34f, 0.4f);
+    // Bordas da tabela em slate-600, separa colunas e linhas sem chamar
+    // atenção demais (mais escuro que as linhas de dados, mas não preto).
+    glColor3f(0.278f, 0.333f, 0.412f); // slate-600
     glBegin(GL_LINES);
     for (int i = 0; i <= 6; i++) {
         int lx = (i == 6) ? tableX + tableWidth : colX[i];
@@ -380,8 +492,7 @@ void Renderer::drawGridThumbnail(const Grid& g, float x, float y, float size) {
     int h = g.getHeight();
     float cell = size / static_cast<float>(std::max(w, h));
 
-    // Fundo (equivalente ao piso cinza-claro das células Empty na cena 3D
-    // e no minimapa).
+    // Fundo equivalente ao piso cinza-claro das células Empty na cena 3D.
     glColor3f(0.82f, 0.82f, 0.82f);
     glBegin(GL_QUADS);
     glVertex2f(x, y);
@@ -396,14 +507,18 @@ void Renderer::drawGridThumbnail(const Grid& g, float x, float y, float size) {
             CellType t = g.get(gx, gy);
             if (t == CellType::Empty) continue;
 
-            switch (t) {
-                case CellType::Wall:    glColor3f(0.6f, 0.1f, 0.1f); break;
-                case CellType::Start:   glColor3f(0.1f, 0.8f, 0.1f); break;
-                case CellType::Goal:    glColor3f(0.1f, 0.1f, 0.8f); break;
-                case CellType::Path:    glColor3f(0.0f, 1.0f, 1.0f); break;
-                case CellType::Visited: glColor3f(0.9f, 0.6f, 0.1f); break;
-                default: continue;
-            }
+    // Cores originais da grid (não fazem parte do redesign de UI): mantidas
+    // com matizes bem distintos entre si de propósito, para que dê pra
+    // reconhecer cada categoria de longe/em miniatura, sem depender de
+    // diferenças sutis de brilho dentro de uma mesma família de cor.
+    switch (t) {
+        case CellType::Wall:    glColor3f(0.6f, 0.1f, 0.1f); break;
+        case CellType::Start:   glColor3f(0.1f, 0.8f, 0.1f); break;
+        case CellType::Goal:    glColor3f(0.1f, 0.1f, 0.8f); break;
+        case CellType::Path:    glColor3f(0.0f, 1.0f, 1.0f); break;
+        case CellType::Visited: glColor3f(0.9f, 0.6f, 0.1f); break;
+        default: continue;
+    }
 
             float cx = x + gx * cell;
             float cy = y + gy * cell;
@@ -444,6 +559,8 @@ void Renderer::drawMiniMap() {
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             CellType type = grid.get(x, y);
+            // Cores originais da grid, mantidas com matizes distintos entre
+            // si (ver nota em drawGridThumbnail).
             switch (type) {
                 case CellType::Wall:    glColor3f(0.6f, 0.1f, 0.1f); break;
                 case CellType::Start:   glColor3f(0.1f, 0.8f, 0.1f); break;
@@ -465,7 +582,9 @@ void Renderer::drawMiniMap() {
         }
     }
 
-    glColor3f(1.0f, 1.0f, 1.0f);
+    // Legenda em slate-200, claro o bastante para ler sobre o fundo
+    // escuro da cena 3D, sem ser branco puro (mais suave aos olhos).
+    glColor3f(0.886f, 0.910f, 0.941f); // slate-200
     const char* legend[] = {
         "Controles:",
         "S: Start | G: Goal",
@@ -516,7 +635,10 @@ void Renderer::display() {
     if (state == AppState::Menu) {
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         drawMenu();
+        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LIGHTING);
         glutSwapBuffers();
@@ -526,7 +648,10 @@ void Renderer::display() {
     if (state == AppState::Results) {
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         drawResults();
+        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LIGHTING);
         glutSwapBuffers();
@@ -547,6 +672,9 @@ void Renderer::display() {
     for (int y = 0; y < grid.getHeight(); y++) {
         for (int x = 0; x < grid.getWidth(); x++) {
             CellType type = grid.get(x, y);
+            // Cores originais da grid, mantidas com matizes distintos entre
+            // si (ver nota em drawGridThumbnail), o wireframe de contorno
+            // dos cubos (em drawCube) continua valendo para todos eles.
             switch (type) {
                 case CellType::Wall:   drawCube(x, y, 0.8f, 0.2f, 0.2f); break;
                 case CellType::Start:  drawCube(x, y, 0.2f, 0.8f, 0.2f); break;
@@ -576,11 +704,13 @@ void Renderer::display() {
 
     // Desliga luz e teste de profundidade para a interface 2D: sem isso, o
     // teste de profundidade (GL_LESS) descarta qualquer desenho posterior
-    // que sobreponha um pixel já escrito na mesma profundidade (z=0) —
-    // exatamente o bug que deixava o menu com a tela preta e vazia.
+    // que sobreponha um pixel já escrito na mesma profundidade (z=0).
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     drawMiniMap();
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
 
@@ -609,16 +739,16 @@ void Renderer::mouse(int button, int state, int x, int y) {
         } else if (x >= menuPlusX && x <= menuPlusX + menuPlusW &&
                    y >= menuPlusY && y <= menuPlusY + menuPlusH) {
             controller.increaseGridSize();
-        } else if (x >= menuAlgoX && x <= menuAlgoX + menuAlgoW &&
-                   y >= menuAlgoY && y < menuAlgoY + kAlgorithmCount * menuAlgoSpacing) {
-            int rel = y - menuAlgoY;
-            int index = rel / menuAlgoSpacing;
-            if (index >= 0 && index < kAlgorithmCount && (rel % menuAlgoSpacing) <= menuAlgoH) {
-                controller.toggleAlgorithmSelected(kAllAlgorithmTypes[index]);
-            }
         } else if (x >= menuAutoWallsX && x <= menuAutoWallsX + menuAutoWallsW &&
                    y >= menuAutoWallsY && y <= menuAutoWallsY + menuAutoWallsH) {
             controller.toggleAutoWalls();
+        } else if (y >= menuAlgoY && y <= menuAlgoY + menuAlgoH) {
+            for (int i = 0; i < kAlgorithmCount; i++) {
+                if (x >= menuAlgoChipX[i] && x <= menuAlgoChipX[i] + menuAlgoChipW[i]) {
+                    controller.toggleAlgorithmSelected(kAllAlgorithmTypes[i]);
+                    break;
+                }
+            }
         } else if (x >= menuConfirmX && x <= menuConfirmX + menuConfirmW &&
                    y >= menuConfirmY && y <= menuConfirmY + menuConfirmH) {
             controller.confirmMenu();

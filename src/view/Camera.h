@@ -30,15 +30,14 @@ public:
 
     // Inclina a câmera verticalmente em torno do centro (com limites, para
     // não deixar a câmera atravessar o chão nem virar de cabeça para baixo
-    // durante a órbita livre — a vista top-down exata de 90° fica reservada
-    // para o botão dedicado do próximo passo). Não faz nada enquanto a
-    // vista top-down estiver travada ou enquanto a transição entre vistas
-    // estiver em andamento (ver toggleTopView()/animationStep()).
+    // durante a órbita livre, a vista top-down exata de 90° só é alcançada
+    // via toggleTopView()). Não faz nada enquanto a vista top-down estiver
+    // travada ou enquanto a transição entre vistas estiver em andamento.
     void orbitVertical(float deltaDeg);
 
     // Alterna entre a órbita livre e a vista de topo (elevation travada em
     // 90°, olhando reto para baixo). Não muda o ângulo na hora: define um
-    // alvo (targetElevation) e liga a animação — quem realmente aproxima a
+    // alvo (targetElevation) e liga a animação, quem realmente aproxima a
     // câmera do alvo, um pouco a cada chamada, é animationStep().
     void toggleTopView();
     bool isTopView() const { return topViewActive; }

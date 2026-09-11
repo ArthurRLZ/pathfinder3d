@@ -15,8 +15,8 @@ struct SearchStats {
 // Interface comum para algoritmos de busca em grid que podem ser executados
 // de forma "stepada" (uma unidade de trabalho por chamada), permitindo que o
 // Controller anime a exploração célula por célula em vez de rodar tudo de
-// uma vez. Cada algoritmo concreto (BFS, AStar, futuramente DFS/Dijkstra)
-// implementa essa interface.
+// uma vez. Cada algoritmo concreto (BFS, AStar, DFS, Dijkstra) implementa
+// essa interface.
 class ISearchAlgorithm {
 public:
     virtual ~ISearchAlgorithm() = default;

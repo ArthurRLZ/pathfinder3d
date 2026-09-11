@@ -244,7 +244,7 @@ void Controller::confirmMenu() {
 
     if (camera) {
         // O centro geométrico e o raio "confortável" mudam junto com o
-        // tamanho da grid — sem isso, a câmera continuaria orbitando o
+        // tamanho da grid, sem isso, a câmera continuaria orbitando o
         // centro do tamanho antigo.
         Vec3 newCenter(pendingGridSize / 2.0f, 0.0f, pendingGridSize / 2.0f);
         float newRadius = pendingGridSize * 1.3f + 5.0f;
@@ -273,13 +273,11 @@ void Controller::runComparison() {
         // sem afetar a grid real nem a exibida em tela.
         Grid clone = grid;
 
-        // Limpa qualquer Visited/Path que tenha sobrado de uma execução
-        // interativa anterior (Enter) na grid real. Sem isso, BFS/DFS (que só
-        // andam por cima de CellType::Empty ou CellType::Goal) tratariam
-        // essas células como bloqueio, dando um resultado incorreto e
-        // inconsistente com A*/Dijkstra (que só recusam CellType::Wall).
-        // startAlgorithm() já faz essa mesma limpeza antes de rodar
-        // interativamente; aqui é a mesma lógica aplicada à cópia.
+        // Limpa Visited/Path que tenha sobrado de uma execução interativa
+        // anterior (Enter) na grid real. Sem isso, BFS/DFS (que só andam
+        // por cima de CellType::Empty ou CellType::Goal) tratariam essas
+        // células como bloqueio, diferente de A*/Dijkstra (que só recusam
+        // CellType::Wall) — mesma limpeza que startAlgorithm() já faz.
         for (int y = 0; y < clone.getHeight(); y++) {
             for (int x = 0; x < clone.getWidth(); x++) {
                 CellType t = clone.get(x, y);
@@ -294,7 +292,7 @@ void Controller::runComparison() {
         while (!algo->step()) {} // sem timer: roda tudo de uma vez, só para medir
 
         // Pinta o caminho encontrado por cima do Visited, igual tick() faz na
-        // busca interativa — assim o "retrato" guardado abaixo fica idêntico
+        // busca interativa, assim o "retrato" guardado abaixo fica idêntico
         // ao que apareceria no minimapa se essa fosse a busca ativa.
         if (algo->found()) {
             for (const auto& c : algo->getPath()) {

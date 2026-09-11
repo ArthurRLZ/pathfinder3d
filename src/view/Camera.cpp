@@ -68,7 +68,6 @@ void Camera::updateCameraVectors() {
     // Vetor "up" derivado analiticamente (tangente à esfera na direção de
     // elevação crescente), em vez do Up = cross(Right, Front) tradicional.
     // Essa fórmula não degenera quando elevation se aproxima de 90° (câmera
-    // olhando reto para baixo) — o que é essencial para a vista top-down do
-    // próximo passo, que de outra forma sofreria de gimbal lock aqui.
+    // olhando reto para baixo), evitando gimbal lock na vista top-down.
     Up = Vec3(-sinEl * cosAz, cosEl, -sinEl * sinAz);
 }
